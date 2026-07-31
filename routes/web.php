@@ -82,16 +82,16 @@ Route::get('/test-mail', function () {
 });
 
 Route::get('/app/player', function () {
-    return response()->download(public_path('downloads/winning-heaven.apk'), 'WinningHeaven-Player.apk');
+    return response()->download(public_path('downloads/winning-heaven.apk'), 'WinningHeaven-Player.apk', ['Content-Type' => 'application/vnd.android.package-archive']);
 });
 Route::get('/app/admin', function () {
-    return response()->download(public_path('downloads/winning-heaven-portal.apk'), 'WinningHeaven-HQ.apk');
+    return response()->download(public_path('downloads/winning-heaven-portal.apk'), 'WinningHeaven-HQ.apk', ['Content-Type' => 'application/vnd.android.package-archive']);
 });
 Route::get('/app/distributor', function () {
-    return response()->download(public_path('downloads/winning-heaven-distributor.apk'), 'WinningHeaven-Distributor.apk');
+    return response()->download(public_path('downloads/winning-heaven-distributor.apk'), 'WinningHeaven-Distributor.apk', ['Content-Type' => 'application/vnd.android.package-archive']);
 });
 Route::get('/app/affiliate', function () {
-    return response()->download(public_path('downloads/winning-heaven-affiliate.apk'), 'WinningHeaven-Affiliate.apk');
+    return response()->download(public_path('downloads/winning-heaven-affiliate.apk'), 'WinningHeaven-Affiliate.apk', ['Content-Type' => 'application/vnd.android.package-archive']);
 });
 
 Route::get('/deploy-site', function (\Illuminate\Http\Request $request) {
