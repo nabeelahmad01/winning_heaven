@@ -491,6 +491,7 @@
               <td>{{ $g->used_coins ?? 0 }}</td>
               <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">{{ $g->link }}</td>
               <td class="wh-btn-row">
+                <button type="button" class="wh-btn-sm" onclick="openEditGameModal({{ json_encode($g) }})">Edit Game</button>
                 <button type="button" class="wh-btn-sm ghost" onclick="editGameCoins('{{ $g->public_id }}', '{{ e($g->available_coins) }}')">Edit pool</button>
                 <button type="button" class="wh-btn-sm danger" onclick="deleteGame('{{ $g->public_id }}', '{{ e($g->title) }}')">Delete</button>
               </td>
@@ -1284,6 +1285,41 @@
   </div>
 </div>
 
+{{-- Edit Game modal (Jackpot AdminGameModal) --}}
+<div class="wh-desk-modal" id="gameEditModal" aria-hidden="true">
+  <div class="wh-desk-modal__card">
+    <div class="wh-desk-modal__head">
+      <h3 style="font-family:var(--font-display);margin:0">Edit Game</h3>
+      <button type="button" class="wh-nav__btn" data-close-modal="gameEditModal">Close</button>
+    </div>
+    <form id="gameEditForm" class="wh-desk-modal__body">
+      <input type="hidden" id="editGamePublicId">
+      <div class="wh-field"><label>Title *</label><div class="box"><input name="title" id="editGameTitle" required placeholder="Game name"></div></div>
+      <div class="wh-field"><label>Badge</label>
+        <select name="badge" id="editGameBadge" style="width:100%;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink);border-radius:12px;padding:.75rem .85rem">
+          <option value="none">none</option>
+          <option value="hot">HOT</option>
+          <option value="new">NEW</option>
+        </select>
+      </div>
+      <div class="wh-field"><label>Play link *</label><div class="box"><input name="link" id="editGameLink" required placeholder="https://…"></div></div>
+      <div class="wh-field"><label>Open panel link (optional)</label><div class="box"><input name="open_panel_link" id="editGameOpenPanelLink" placeholder="https://…"></div></div>
+      <div class="wh-field"><label>Available pool coins</label><div class="box"><input name="available_coins" id="editGameCoins" type="number" step="1"></div></div>
+      <input type="hidden" name="image" id="editGameImageField" value="">
+      <label class="wh-upload">
+        <input type="file" id="editGameImageFile" accept="image/*">
+        <i class="fa-solid fa-image"></i>
+        <div>Change game logo / image (optional)</div>
+        <img id="editGameImagePreview" alt="" style="display:none">
+      </label>
+      <div class="wh-desk-modal__actions">
+        <button type="button" class="wh-btn-sm ghost" data-close-modal="gameEditModal">Cancel</button>
+        <button class="wh-cta" type="submit">Update Game</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 {{-- Create / Edit Gateway modal (Jackpot AdminGatewayModal) --}}
 <div class="wh-desk-modal" id="gwCreateModal" aria-hidden="true">
   <div class="wh-desk-modal__card" style="max-width:560px">
@@ -2049,6 +2085,58 @@
         setTimeout(() => { location.href = currentTabUrl('games'); }, 400);
       } catch (err) {
         WH.toast(err.message || 'Failed', 'error');
+      }
+    };
+  }
+
+  window.openEditGameModal = function(game) {
+    document.getElementById('editGamePublicId').value = game.public_id || '';
+    document.getElementById('editGameTitle').value = game.title || '';
+    document.getElementById('editGameBadge').value = game.badge || 'none';
+    document.getElementById('editGameLink').value = game.link || '';
+    document.getElementById('editGameOpenPanelLink').value = game.open_panel_link || '';
+    document.getElementById('editGameCoins').value = game.available_coins || 0;
+    document.getElementById('editGameImageField').value = game.image || '';
+    const prev = document.getElementById('editGameImagePreview');
+    if (game.image) {
+      prev.src = game.image;
+      prev.style.display = 'block';
+    } else {
+      prev.style.display = 'none';
+    }
+    openDeskModal('gameEditModal');
+  };
+
+  document.getElementById('editGameImageFile')?.addEventListener('change', async (e) => {
+    try {
+      const dataUrl = await readFileAsDataUrl(e.target.files?.[0]);
+      document.getElementById('editGameImageField').value = dataUrl;
+      const prev = document.getElementById('editGameImagePreview');
+      if (prev) { prev.src = dataUrl; prev.style.display = 'block'; }
+    } catch (err) { WH.toast(err.message || 'Upload failed', 'error'); }
+  });
+
+  const gameEditForm = document.getElementById('gameEditForm');
+  if (gameEditForm) {
+    gameEditForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const publicId = document.getElementById('editGamePublicId').value;
+      const body = Object.fromEntries(new FormData(e.target));
+      body.available_coins = Number(body.available_coins || 0);
+      body.badge = body.badge || 'none';
+      if (!String(body.title || '').trim()) return WH.toast('Title required', 'error');
+      if (!String(body.link || '').trim()) return WH.toast('Link required', 'error');
+
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      WH.setBtnLoading(submitBtn, true, 'UPDATING…');
+      try {
+        await WH.api('/games/' + publicId, { method: 'PATCH', body: JSON.stringify(body) });
+        WH.toast('Game updated successfully');
+        closeDeskModal('gameEditModal');
+        setTimeout(() => { location.href = currentTabUrl('games'); }, 400);
+      } catch (err) {
+        WH.setBtnLoading(submitBtn, false);
+        WH.toast(err.message || 'Could not update game', 'error');
       }
     };
   }
