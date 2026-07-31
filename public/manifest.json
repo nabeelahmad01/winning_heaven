@@ -1,0 +1,18 @@
+{
+  "name": "Winning Heaven",
+  "short_name": "Winning Heaven",
+  "description": "Winning Heaven VIP Casino & Gaming Portal",
+  "start_url": "/lobby",
+  "display": "standalone",
+  "background_color": "#07131f",
+  "theme_color": "#07131f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/brand/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

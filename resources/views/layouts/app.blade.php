@@ -10,8 +10,28 @@
     $fav = !empty($frontend['favicon_url']) ? $frontend['favicon_url'] : ((!empty($frontend['logo_url'])) ? $frontend['logo_url'] : '/brand/logo.png');
     $favUrl = str_starts_with($fav, 'data:') ? $fav : asset(ltrim($fav, '/'));
     $splashLogo = ($frontend['logo_url'] ?? null) ?: '/brand/logo.png';
+    $reqUri = request()->path();
+    if (str_starts_with($reqUri, 'admin') || str_starts_with($reqUri, 'finance') || str_starts_with($reqUri, 'operations') || str_starts_with($reqUri, 'coins') || str_starts_with($reqUri, 'support-staff') || str_starts_with($reqUri, 'boss')) {
+      $pwaManifest = asset('manifest-admin.json');
+      $pwaTitle = 'Winning Heaven HQ';
+    } elseif (str_starts_with($reqUri, 'distributor')) {
+      $pwaManifest = asset('manifest-distributor.json');
+      $pwaTitle = 'Winning Heaven Distributor';
+    } elseif (str_starts_with($reqUri, 'affiliate')) {
+      $pwaManifest = asset('manifest-affiliate.json');
+      $pwaTitle = 'Winning Heaven Affiliate';
+    } else {
+      $pwaManifest = asset('manifest.json');
+      $pwaTitle = 'Winning Heaven';
+    }
   @endphp
-  <title>@yield('title', 'Winning Heaven')</title>
+  <title>@yield('title', $pwaTitle)</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{ $pwaTitle }}">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="{{ $pwaTitle }}">
+  <link rel="manifest" href="{{ $pwaManifest }}">
   <link rel="icon" type="image/png" href="{{ $favUrl }}">
   <link rel="shortcut icon" href="{{ $favUrl }}">
   <link rel="apple-touch-icon" href="{{ $favUrl }}">

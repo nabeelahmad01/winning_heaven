@@ -1,0 +1,18 @@
+{
+  "name": "Winning Heaven HQ",
+  "short_name": "WH HQ",
+  "description": "Winning Heaven Admin & HQ Operations Portal",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#07131f",
+  "theme_color": "#07131f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/brand/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

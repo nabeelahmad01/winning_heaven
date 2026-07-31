@@ -81,6 +81,19 @@ Route::get('/test-mail', function () {
     }
 });
 
+Route::get('/app/player', function () {
+    return response()->download(public_path('downloads/winning-heaven.apk'), 'WinningHeaven-Player.apk');
+});
+Route::get('/app/admin', function () {
+    return response()->download(public_path('downloads/winning-heaven-portal.apk'), 'WinningHeaven-HQ.apk');
+});
+Route::get('/app/distributor', function () {
+    return response()->download(public_path('downloads/winning-heaven-distributor.apk'), 'WinningHeaven-Distributor.apk');
+});
+Route::get('/app/affiliate', function () {
+    return response()->download(public_path('downloads/winning-heaven-affiliate.apk'), 'WinningHeaven-Affiliate.apk');
+});
+
 Route::get('/deploy-site', function (\Illuminate\Http\Request $request) {
     $secret = env('DEPLOY_SECRET', 'winning_heaven_deploy_2026');
     $token = $request->query('key') ?? $request->query('secret') ?? '';
