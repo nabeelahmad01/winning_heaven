@@ -1593,6 +1593,58 @@
     } catch (_) {}
   }
 
+  async function softRefreshGames() {
+    try {
+      const d = await WH.api('/games');
+      const body = document.querySelector('#pane-games tbody');
+      if (!body) return;
+      const games = d.games || d.items || [];
+      if (!games.length) {
+        body.innerHTML = '<tr><td colspan="6" style="color:var(--mute)">No games</td></tr>';
+        return;
+      }
+      body.innerHTML = games.map(g => `
+        <tr>
+          <td>${esc(g.title)}</td>
+          <td><span class="wh-badge">${esc(g.badge || 'none')}</span></td>
+          <td>${esc(g.available_coins ?? g.availableCoins ?? 0)}</td>
+          <td>${esc(g.used_coins ?? g.usedCoins ?? 0)}</td>
+          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${esc(g.link || '')}</td>
+          <td class="wh-btn-row">
+            <button type="button" class="wh-btn-sm" onclick='openEditGameModal(${JSON.stringify(g)})'>Edit Game</button>
+            <button type="button" class="wh-btn-sm ghost" onclick="editGameCoins('${esc(g.public_id)}', '${esc(g.available_coins)}')">Edit pool</button>
+            <button type="button" class="wh-btn-sm danger" onclick="deleteGame('${esc(g.public_id)}', '${esc(g.title)}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (_) {}
+  }
+
+  async function softRefreshGateways() {
+    try {
+      const d = await WH.api('/gateways');
+      const body = document.querySelector('#pane-gateways tbody');
+      if (!body) return;
+      const items = d.gateways || d.items || [];
+      if (!items.length) {
+        body.innerHTML = '<tr><td colspan="5" style="color:var(--mute)">No gateways</td></tr>';
+        return;
+      }
+      body.innerHTML = items.map(gw => `
+        <tr>
+          <td><strong>${esc(gw.name || gw.theme)}</strong></td>
+          <td><span class="wh-badge">${esc(gw.theme)}</span></td>
+          <td>${esc(gw.tag || 'link')}</td>
+          <td>${gw.is_withdraw_active ? '<span class="wh-badge">Yes</span>' : '<span class="wh-badge" style="opacity:.6">No</span>'}</td>
+          <td class="wh-btn-row">
+            <button type="button" class="wh-btn-sm ghost" onclick='openEditGwModal(${JSON.stringify(gw)})'>Edit</button>
+            <button type="button" class="wh-btn-sm danger" onclick="deleteGateway('${esc(gw.public_id)}', '${esc(gw.name || gw.theme)}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (_) {}
+  }
+
   window.saveAccountCreds = async function (id) {
     const username = (document.getElementById('cred-user-' + id)?.value || '').trim();
     const password = (document.getElementById('cred-pass-' + id)?.value || '').trim();
@@ -2123,7 +2175,7 @@
         await WH.api('/games', { method: 'POST', body: JSON.stringify(body) });
         WH.toast('Game added');
         closeDeskModal('gameCreateModal');
-        setTimeout(() => { location.href = currentTabUrl('games'); }, 400);
+        softRefreshGames();
       } catch (err) {
         WH.toast(err.message || 'Failed', 'error');
       }
@@ -2174,7 +2226,7 @@
         await WH.api('/games/' + publicId, { method: 'PATCH', body: JSON.stringify(body) });
         WH.toast('Game updated successfully');
         closeDeskModal('gameEditModal');
-        setTimeout(() => { location.href = currentTabUrl('games'); }, 400);
+        softRefreshGames();
       } catch (err) {
         WH.setBtnLoading(submitBtn, false);
         WH.toast(err.message || 'Could not update game', 'error');
@@ -2227,7 +2279,7 @@
           WH.toast('Gateway added');
         }
         closeDeskModal('gwCreateModal');
-        setTimeout(() => { location.href = currentTabUrl('gateways'); }, 400);
+        softRefreshGateways();
       } catch (err) {
         WH.toast(err.message || 'Failed', 'error');
       }
@@ -2283,7 +2335,7 @@
         const r = await WH.api('/promotions', { method: 'POST', body: JSON.stringify(body) });
         const reach = r.reach || {};
         WH.toast('Promo created · players ' + (reach.players || 0) + ' · emailed ' + (reach.emailed || 0));
-        setTimeout(() => { location.href = currentTabUrl('promotions'); }, 500);
+        promoForm.reset();
       } catch (err) {
         WH.toast(err.message || 'Failed', 'error');
       }
