@@ -114,8 +114,8 @@
       <div style="padding:.35rem .35rem;color:var(--mute);font-size:.75rem">
         {{ $user->email }} · {{ implode(', ', $roleList) ?: ($user->role ?: 'staff') }}
       </div>
-      <a class="nav" href="{{ $frontend['android_app_url'] ?? '/downloads/winning-heaven-portal.apk' }}" id="downloadPortalApp" style="font-size:.82rem">
-        <i class="fa-solid fa-download"></i> Download Portal App
+      <a class="nav" href="/downloads/WHPortal.apk" download id="downloadPortalApp" style="font-size:.82rem">
+        <i class="fa-solid fa-download"></i> Download WH Portal App
       </a>
       <button type="button" id="logoutBtn">Logout</button>
     </div>

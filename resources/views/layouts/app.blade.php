@@ -225,11 +225,56 @@
           return true;
         }
       },
+      showGetAppModal() {
+        const fieldsHtml = `
+          <div style="text-align:left;padding:.2rem 0;">
+            <div style="background:rgba(62,224,178,0.08);border:1px solid rgba(62,224,178,0.25);border-radius:12px;padding:1rem;margin-bottom:1rem;">
+              <h4 style="color:#3ee0b2;margin:0 0 .4rem 0;display:flex;align-items:center;gap:.5rem;font-size:1rem;">
+                <i class="fa-brands fa-android" style="font-size:1.3rem;"></i> Android App — Winning Heaven
+              </h4>
+              <p style="color:#cbd5e1;font-size:0.85rem;margin:0 0 .8rem 0;line-height:1.4;">
+                Download official Android APK. Auto-syncs live updates with zero reinstallations needed.
+              </p>
+              <a href="/downloads/WinningHeaven.apk" download class="wh-cta" style="display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;padding:.6rem 1.2rem;font-size:.9rem;border-radius:8px;font-weight:bold;">
+                <i class="fa-solid fa-download"></i> Download WinningHeaven.apk
+              </a>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:1rem;">
+              <h4 style="color:#e2e8f0;margin:0 0 .4rem 0;display:flex;align-items:center;gap:.5rem;font-size:1rem;">
+                <i class="fa-brands fa-apple" style="font-size:1.3rem;"></i> iPhone / iOS App Setup
+              </h4>
+              <ol style="color:#94a3b8;font-size:0.85rem;margin:0;padding-left:1.2rem;line-height:1.6;">
+                <li>Open <strong>winningheaven.com</strong> in Safari.</li>
+                <li>Tap the <strong>Share</strong> button at bottom.</li>
+                <li>Tap <strong>Add to Home Screen</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        `;
+        return this._openModal({
+          title: 'Download Winning Heaven App',
+          text: '',
+          fieldsHtml,
+          actions: [{ label: 'Close', primary: true, onClick: () => this._closeModal(true) }]
+        });
+      },
       initDesktopNotifications() {
         this.initAudioUnlock();
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistration().then((reg) => {
-            if (!reg) navigator.serviceWorker.register('/sw.js').catch(() => {});
+          navigator.serviceWorker.register('/sw.js').then((reg) => {
+            if ('Notification' in window && Notification.permission === 'default') {
+              Notification.requestPermission().then((permission) => {
+                if (permission === 'granted' && reg.pushManager) {
+                  reg.pushManager.subscribe({ userVisibleOnly: true }).then((sub) => {
+                    fetch('/api/push/subscribe', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': this.csrf },
+                      body: JSON.stringify({ endpoint: sub.endpoint, subscription: sub.toJSON() })
+                    }).catch(() => {});
+                  }).catch(() => {});
+                }
+              }).catch(() => {});
+            }
           }).catch(() => {});
         }
         const clear = () => {
@@ -244,15 +289,7 @@
         window.addEventListener('focus', () => { if (document.visibilityState === 'visible') clear(); });
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && document.hasFocus()) clear(); });
         if ('Notification' in window && Notification.permission === 'default') {
-          const ask = () => {
-            try { Notification.requestPermission().catch(() => {}); } catch (_) {}
-            window.removeEventListener('pointerdown', ask);
-            window.removeEventListener('keydown', ask);
-            window.removeEventListener('touchstart', ask);
-          };
-          window.addEventListener('pointerdown', ask, { once: true, passive: true });
-          window.addEventListener('keydown', ask, { once: true });
-          window.addEventListener('touchstart', ask, { once: true, passive: true });
+          try { Notification.requestPermission().catch(() => {}); } catch (_) {}
         }
       },
       notifyStaffActivity(title, body, count, url) {

@@ -105,4 +105,82 @@ class PushController extends Controller
             'delivered' => $delivered,
         ]);
     }
+
+    public static function notifyStaff(string $title, string $body, string $url = '/admin/login'): void
+    {
+        try {
+            $vapidPublic = (string) config('services.vapid.public_key', '');
+            $vapidPrivate = (string) config('services.vapid.private_key', '');
+            if ($vapidPublic && $vapidPrivate && class_exists(\Minishlink\WebPush\WebPush::class)) {
+                $auth = [
+                    'VAPID' => [
+                        'subject' => config('services.vapid.subject', 'mailto:admin@winningheaven.com'),
+                        'publicKey' => $vapidPublic,
+                        'privateKey' => $vapidPrivate,
+                    ],
+                ];
+                $webPush = new \Minishlink\WebPush\WebPush($auth);
+                $payload = json_encode([
+                    'title' => $title,
+                    'body' => $body,
+                    'url' => $url,
+                ]);
+                foreach (PushSubscription::query()->where('audience', 'staff')->cursor() as $sub) {
+                    $subData = $sub->subscription;
+                    if (is_array($subData) && !empty($subData['endpoint'])) {
+                        $subscription = \Minishlink\WebPush\Subscription::create($subData);
+                        $webPush->queueNotification($subscription, $payload);
+                    }
+                }
+                foreach ($webPush->flush() as $report) {}
+            }
+
+            // OneSignal staff alert fallback
+            $oneSignalAppId = env('ONESIGNAL_STAFF_APP_ID', env('ONESIGNAL_APP_ID', ''));
+            $oneSignalRestKey = env('ONESIGNAL_REST_KEY', '');
+            if ($oneSignalAppId && $oneSignalRestKey) {
+                \Illuminate\Support\Facades\Http::withHeaders([
+                    'Authorization' => 'Basic ' . $oneSignalRestKey,
+                    'Content-Type' => 'application/json',
+                ])->post('https://onesignal.com/api/v1/notifications', [
+                    'app_id' => $oneSignalAppId,
+                    'included_segments' => ['Staff'],
+                    'headings' => ['en' => $title],
+                    'contents' => ['en' => $body],
+                    'url' => url($url),
+                ]);
+            }
+        } catch (\Throwable $e) {}
+    }
+
+    public static function notifyPlayer(string $email, string $title, string $body, string $url = '/lobby'): void
+    {
+        try {
+            $vapidPublic = (string) config('services.vapid.public_key', '');
+            $vapidPrivate = (string) config('services.vapid.private_key', '');
+            if ($vapidPublic && $vapidPrivate && class_exists(\Minishlink\WebPush\WebPush::class)) {
+                $auth = [
+                    'VAPID' => [
+                        'subject' => config('services.vapid.subject', 'mailto:admin@winningheaven.com'),
+                        'publicKey' => $vapidPublic,
+                        'privateKey' => $vapidPrivate,
+                    ],
+                ];
+                $webPush = new \Minishlink\WebPush\WebPush($auth);
+                $payload = json_encode([
+                    'title' => $title,
+                    'body' => $body,
+                    'url' => $url,
+                ]);
+                foreach (PushSubscription::query()->where('user_email', strtolower($email))->cursor() as $sub) {
+                    $subData = $sub->subscription;
+                    if (is_array($subData) && !empty($subData['endpoint'])) {
+                        $subscription = \Minishlink\WebPush\Subscription::create($subData);
+                        $webPush->queueNotification($subscription, $payload);
+                    }
+                }
+                foreach ($webPush->flush() as $report) {}
+            }
+        } catch (\Throwable $e) {}
+    }
 }

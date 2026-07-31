@@ -17,9 +17,7 @@
     </div>
   </a>
   <div class="wh-nav__actions">
-    @if(!empty($f['get_app_enabled']))
-      <button type="button" class="wh-nav__btn wh-nav__btn--mint" id="getAppBtn"><i class="fa-solid fa-mobile-screen-button"></i> Get App</button>
-    @endif
+    <button type="button" class="wh-nav__btn wh-nav__btn--mint" onclick="WH.showGetAppModal()"><i class="fa-solid fa-mobile-screen-button"></i> Get App</button>
     <a class="wh-nav__btn {{ $activeTab === 'referrals' ? 'is-active' : '' }}" href="{{ route('referrals') }}"><i class="fa-solid fa-gift"></i> Refer</a>
     @if(Auth::check())
       <button type="button" class="wh-nav__btn" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>

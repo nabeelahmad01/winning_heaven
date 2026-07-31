@@ -217,6 +217,16 @@ class TransactionController extends Controller
             'txType' => $tx->type,
         ]);
 
+        try {
+            $txTypeName = $data['type'] === 'WITHDRAW' ? 'Cashout Request' : 'Deposit Request';
+            $txAmount = '$' . number_format($amount, 2);
+            \App\Http\Controllers\Api\PushController::notifyStaff(
+                "New {$txTypeName}: {$txAmount}",
+                "{$user->name} ({$user->email}) submitted a {$data['type']} request for {$txAmount}.",
+                '/admin/login'
+            );
+        } catch (\Throwable $e) {}
+
         return response()->json(['ok' => true, 'item' => $tx], 201);
     }
 
