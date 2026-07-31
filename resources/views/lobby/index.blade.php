@@ -905,10 +905,12 @@ document.getElementById('claimFreeplayTop').onclick = async function() {
 };
 document.getElementById('logoutBtn').onclick = async () => { await WH.api('/auth/logout',{method:'POST',body:'{}'}); location.href='/login'; };
 document.getElementById('getAppBtn')?.addEventListener('click', () => {
-  const android = {!! json_encode($f['android_app_url'] ?? '/downloads/winning-heaven.apk') !!};
-  const ios = {!! json_encode($f['ios_app_url'] ?? '') !!};
-  if (android) window.open(android, '_blank');
-  else WH.alert(ios || 'Install the Winning Heaven app from Android APK or iOS home screen.', 'Get the App');
+  WH.alert(
+    '📱 <b>Install Winning Heaven App:</b><br><br>' +
+    '1. <b>iPhone / iOS:</b> Safari browser mein niche Share button 📤 dabayein aur <b>"Add to Home Screen"</b> choose karein.<br><br>' +
+    '2. <b>Android:</b> Browser ke Top Right 3-Dots menu par tap karke <b>"Add to Home Screen"</b> ya <b>"Install App"</b> par tap karein.',
+    'Get the App'
+  );
 });
 document.getElementById('supportFab').onclick = () => {
   const badge = document.getElementById('supportFabBadge');
