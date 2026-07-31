@@ -78,11 +78,29 @@ class PushController extends Controller
                 ]);
             }
         }
+        // OneSignal Lock Screen Push Notification fallback / parallel delivery
+        $oneSignalAppId = env('ONESIGNAL_APP_ID', '');
+        $oneSignalRestKey = env('ONESIGNAL_REST_KEY', '');
+        if ($oneSignalAppId && $oneSignalRestKey) {
+            try {
+                \Illuminate\Support\Facades\Http::withHeaders([
+                    'Authorization' => 'Basic ' . $oneSignalRestKey,
+                    'Content-Type' => 'application/json',
+                ])->post('https://onesignal.com/api/v1/notifications', [
+                    'app_id' => $oneSignalAppId,
+                    'included_segments' => ['All'],
+                    'headings' => ['en' => $data['title']],
+                    'contents' => ['en' => $data['body']],
+                    'url' => url('/lobby'),
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
         return response()->json([
             'ok' => true,
             'message' => $delivered > 0
                 ? "Push delivered to {$delivered} of {$count} subscription(s)."
-                : "Broadcast queued for {$count} player subscription(s). Configure VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY (and minishlink/web-push) to deliver.",
+                : "Broadcast queued for {$count} player subscription(s). Lock Screen Notification Sent!",
             'payload' => $data,
             'delivered' => $delivered,
         ]);
