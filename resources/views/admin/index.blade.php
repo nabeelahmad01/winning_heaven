@@ -1186,18 +1186,59 @@
           <div class="wh-field"><label>WhatsApp URL</label><div class="box"><input name="info_whatsapp_url" value="{{ $frontend['info_whatsapp_url'] ?? '' }}"></div></div>
           <div class="wh-field"><label>Support email</label><div class="box"><input name="info_email_handle" value="{{ $frontend['info_email_handle'] ?? '' }}"></div></div>
           <div class="wh-field"><label>Support mailto URL</label><div class="box"><input name="info_email_url" value="{{ $frontend['info_email_url'] ?? '' }}"></div></div>
-          <div class="wh-field" style="grid-column:1 / -1"><label>Marquee payouts (JSON array)</label>
-            <textarea name="marquee_payouts_json" rows="4" style="width:100%;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink);border-radius:12px;padding:.75rem .85rem;font-family:ui-monospace,monospace;font-size:.75rem">{{ json_encode($frontend['marquee_payouts'] ?? [], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</textarea>
+          <div class="wh-field" style="grid-column:1 / -1">
+            <label>Favicon URL / Logo (Browser Tab Icon)</label>
+            <div class="box"><input name="favicon_url" id="fe_favicon_url" value="{{ $frontend['favicon_url'] ?? '' }}" placeholder="/brand/logo.png"></div>
           </div>
-          <div class="wh-field" style="grid-column:1 / -1"><label>Cashout rules (JSON array)</label>
-            <textarea name="cashout_rules_json" rows="4" style="width:100%;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink);border-radius:12px;padding:.75rem .85rem;font-family:ui-monospace,monospace;font-size:.75rem">{{ json_encode($frontend['cashout_rules'] ?? [], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</textarea>
+          <div>
+            <label class="wh-upload">
+              <input type="file" id="feFaviconFile" accept="image/*">
+              <i class="fa-solid fa-image"></i>
+              <div>Upload Favicon → Base64</div>
+              <img id="feFaviconPreview" alt="" style="display:none" src="{{ $frontend['favicon_url'] ?? '' }}">
+            </label>
           </div>
-          <div class="wh-field" style="grid-column:1 / -1"><label>Lobby cashout trust items (JSON)</label>
-            <textarea name="lobby_cashout_trust_items_json" rows="3" style="width:100%;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink);border-radius:12px;padding:.75rem .85rem;font-family:ui-monospace,monospace;font-size:.75rem">{{ json_encode($frontend['lobby_cashout_trust_items'] ?? [], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</textarea>
+
+          {{-- Simple Easy Builders for CMS Data --}}
+          <div class="wh-tile" style="grid-column:1 / -1;background:rgba(0,0,0,.25);border:1px solid var(--line);padding:1rem">
+            <h3 style="font-family:var(--font-display);margin-top:0"><i class="fa-solid fa-list-check" style="color:var(--sand)"></i> Marquee Live Payouts (Simple Builder)</h3>
+            <p style="color:var(--mute);font-size:.85rem;margin-bottom:1rem">Add or edit recent winner payouts shown in the lobby marquee bar.</p>
+            <div id="marqueePayoutsContainer" style="display:flex;flex-direction:column;gap:.65rem"></div>
+            <button type="button" class="wh-btn-sm ghost" id="addMarqueePayoutBtn" style="margin-top:.75rem"><i class="fa-solid fa-plus"></i> Add Payout Row</button>
           </div>
-          <div class="wh-field" style="grid-column:1 / -1"><label>Proof screenshots (JSON URLs)</label>
-            <textarea name="proof_screenshots_json" rows="2" style="width:100%;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink);border-radius:12px;padding:.75rem .85rem;font-family:ui-monospace,monospace;font-size:.75rem">{{ json_encode($frontend['proof_screenshots'] ?? [], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</textarea>
+
+          <div class="wh-tile" style="grid-column:1 / -1;background:rgba(0,0,0,.25);border:1px solid var(--line);padding:1rem">
+            <h3 style="font-family:var(--font-display);margin-top:0"><i class="fa-solid fa-shield-halved" style="color:var(--sand)"></i> Cashout Rules (Simple Builder)</h3>
+            <p style="color:var(--mute);font-size:.85rem;margin-bottom:1rem">Define rules displayed to players on the withdrawal/cashout screen.</p>
+            <div id="cashoutRulesContainer" style="display:flex;flex-direction:column;gap:.65rem"></div>
+            <button type="button" class="wh-btn-sm ghost" id="addCashoutRuleBtn" style="margin-top:.75rem"><i class="fa-solid fa-plus"></i> Add Rule Row</button>
           </div>
+
+          <div class="wh-tile" style="grid-column:1 / -1;background:rgba(0,0,0,.25);border:1px solid var(--line);padding:1rem">
+            <h3 style="font-family:var(--font-display);margin-top:0"><i class="fa-solid fa-award" style="color:var(--sand)"></i> Lobby Cashout Trust Items (Simple Builder)</h3>
+            <p style="color:var(--mute);font-size:.85rem;margin-bottom:1rem">Trust badges shown on the player dashboard cashout card.</p>
+            <div id="trustItemsContainer" style="display:flex;flex-direction:column;gap:.65rem"></div>
+            <button type="button" class="wh-btn-sm ghost" id="addTrustItemBtn" style="margin-top:.75rem"><i class="fa-solid fa-plus"></i> Add Trust Item</button>
+          </div>
+
+          {{-- Advanced JSON fallbacks --}}
+          <details style="grid-column:1 / -1;margin-top:.5rem">
+            <summary style="cursor:pointer;color:var(--mute);font-size:.85rem">Advanced Raw JSON Editors (Optional)</summary>
+            <div style="display:grid;gap:.75rem;margin-top:.75rem">
+              <div class="wh-field"><label>Marquee payouts (JSON)</label>
+                <textarea name="marquee_payouts_json" id="fe_marquee_payouts_json" rows="3" style="width:100%;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink);border-radius:12px;padding:.75rem .85rem;font-family:ui-monospace,monospace;font-size:.75rem">{{ json_encode($frontend['marquee_payouts'] ?? [], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</textarea>
+              </div>
+              <div class="wh-field"><label>Cashout rules (JSON)</label>
+                <textarea name="cashout_rules_json" id="fe_cashout_rules_json" rows="3" style="width:100%;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink);border-radius:12px;padding:.75rem .85rem;font-family:ui-monospace,monospace;font-size:.75rem">{{ json_encode($frontend['cashout_rules'] ?? [], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</textarea>
+              </div>
+              <div class="wh-field"><label>Lobby cashout trust items (JSON)</label>
+                <textarea name="lobby_cashout_trust_items_json" id="fe_lobby_cashout_trust_items_json" rows="3" style="width:100%;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink);border-radius:12px;padding:.75rem .85rem;font-family:ui-monospace,monospace;font-size:.75rem">{{ json_encode($frontend['lobby_cashout_trust_items'] ?? [], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</textarea>
+              </div>
+              <div class="wh-field"><label>Proof screenshots (JSON URLs)</label>
+                <textarea name="proof_screenshots_json" id="fe_proof_screenshots_json" rows="2" style="width:100%;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--ink);border-radius:12px;padding:.75rem .85rem;font-family:ui-monospace,monospace;font-size:.75rem">{{ json_encode($frontend['proof_screenshots'] ?? [], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</textarea>
+              </div>
+            </div>
+          </details>
           <div style="grid-column:1 / -1;display:flex;gap:.55rem;flex-wrap:wrap;align-items:center">
             <button class="wh-btn-sm ghost" type="button" id="feSoundTestBtn"><i class="fa-solid fa-volume-high"></i> Test sound</button>
             <label class="wh-upload" style="flex:1;min-width:180px;margin:0;padding:.55rem">
@@ -2438,6 +2479,152 @@
       }
     };
   }
+
+  const feFaviconFile = document.getElementById('feFaviconFile');
+  if (feFaviconFile) {
+    feFaviconFile.onchange = async (e) => {
+      try {
+        const dataUrl = await readAdminFile(e.target.files?.[0]);
+        const field = document.getElementById('fe_favicon_url');
+        if (field) field.value = dataUrl;
+        const prev = document.getElementById('feFaviconPreview');
+        if (prev) { prev.src = dataUrl; prev.style.display = 'block'; }
+        WH.toast('Favicon ready');
+      } catch (err) {
+        WH.toast(err.message || 'Upload failed', 'error');
+        e.target.value = '';
+      }
+    };
+  }
+
+  // --- Simple CMS Builders Sync ---
+  function initCMSBuilders() {
+    const marqueeContainer = document.getElementById('marqueePayoutsContainer');
+    const cashoutRulesContainer = document.getElementById('cashoutRulesContainer');
+    const trustItemsContainer = document.getElementById('trustItemsContainer');
+
+    if (!marqueeContainer) return;
+
+    let payouts = [];
+    let rules = [];
+    let trust = [];
+
+    try { payouts = JSON.parse(document.getElementById('fe_marquee_payouts_json')?.value || '[]'); } catch (_) {}
+    try { rules = JSON.parse(document.getElementById('fe_cashout_rules_json')?.value || '[]'); } catch (_) {}
+    try { trust = JSON.parse(document.getElementById('fe_lobby_cashout_trust_items_json')?.value || '[]'); } catch (_) {}
+
+    if (!Array.isArray(payouts)) payouts = [];
+    if (!Array.isArray(rules)) rules = [];
+    if (!Array.isArray(trust)) trust = [];
+
+    function renderMarquee() {
+      marqueeContainer.innerHTML = '';
+      payouts.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;background:rgba(255,255,255,.04);padding:.5rem;border-radius:8px';
+        div.innerHTML = `
+          <input placeholder="Winner Name (e.g. Alex M.)" value="${e(item.name || '')}" data-idx="${idx}" data-field="name" style="flex:1;min-width:140px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#fff;border-radius:6px;padding:.4rem .6rem">
+          <input placeholder="Amount (e.g. $250.00)" value="${e(item.amount || '')}" data-idx="${idx}" data-field="amount" style="width:110px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#fff;border-radius:6px;padding:.4rem .6rem">
+          <input placeholder="Text (e.g. 5m ago)" value="${e(item.text || '')}" data-idx="${idx}" data-field="text" style="width:100px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#fff;border-radius:6px;padding:.4rem .6rem">
+          <button type="button" class="wh-btn-sm danger" onclick="removeMarqueeRow(${idx})"><i class="fa-solid fa-trash"></i></button>
+        `;
+        marqueeContainer.appendChild(div);
+      });
+      syncJSON();
+    }
+
+    function renderRules() {
+      cashoutRulesContainer.innerHTML = '';
+      rules.forEach((item, idx) => {
+        const title = typeof item === 'string' ? item : (item.title || item.rule || '');
+        const desc = typeof item === 'object' ? (item.desc || item.text || '') : '';
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;background:rgba(255,255,255,.04);padding:.5rem;border-radius:8px';
+        div.innerHTML = `
+          <input placeholder="Rule Title" value="${e(title)}" data-idx="${idx}" data-field="title" style="flex:1;min-width:160px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#fff;border-radius:6px;padding:.4rem .6rem">
+          <input placeholder="Description (optional)" value="${e(desc)}" data-idx="${idx}" data-field="desc" style="flex:2;min-width:200px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#fff;border-radius:6px;padding:.4rem .6rem">
+          <button type="button" class="wh-btn-sm danger" onclick="removeRuleRow(${idx})"><i class="fa-solid fa-trash"></i></button>
+        `;
+        cashoutRulesContainer.appendChild(div);
+      });
+      syncJSON();
+    }
+
+    function renderTrust() {
+      trustItemsContainer.innerHTML = '';
+      trust.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;background:rgba(255,255,255,.04);padding:.5rem;border-radius:8px';
+        div.innerHTML = `
+          <input placeholder="Icon (e.g. fa-shield)" value="${e(item.icon || '')}" data-idx="${idx}" data-field="icon" style="width:110px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#fff;border-radius:6px;padding:.4rem .6rem">
+          <input placeholder="Title" value="${e(item.title || '')}" data-idx="${idx}" data-field="title" style="flex:1;min-width:140px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#fff;border-radius:6px;padding:.4rem .6rem">
+          <input placeholder="Desc" value="${e(item.desc || item.text || '')}" data-idx="${idx}" data-field="desc" style="flex:2;min-width:180px;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#fff;border-radius:6px;padding:.4rem .6rem">
+          <button type="button" class="wh-btn-sm danger" onclick="removeTrustRow(${idx})"><i class="fa-solid fa-trash"></i></button>
+        `;
+        trustItemsContainer.appendChild(div);
+      });
+      syncJSON();
+    }
+
+    function syncJSON() {
+      document.getElementById('fe_marquee_payouts_json').value = JSON.stringify(payouts);
+      document.getElementById('fe_cashout_rules_json').value = JSON.stringify(rules);
+      document.getElementById('fe_lobby_cashout_trust_items_json').value = JSON.stringify(trust);
+    }
+
+    window.removeMarqueeRow = (idx) => { payouts.splice(idx, 1); renderMarquee(); };
+    window.removeRuleRow = (idx) => { rules.splice(idx, 1); renderRules(); };
+    window.removeTrustRow = (idx) => { trust.splice(idx, 1); renderTrust(); };
+
+    document.getElementById('addMarqueePayoutBtn')?.addEventListener('click', () => {
+      payouts.push({ name: 'Player ' + (payouts.length + 1), amount: '$100.00', text: 'Just now' });
+      renderMarquee();
+    });
+
+    document.getElementById('addCashoutRuleBtn')?.addEventListener('click', () => {
+      rules.push({ title: 'New Rule', desc: '' });
+      renderRules();
+    });
+
+    document.getElementById('addTrustItemBtn')?.addEventListener('click', () => {
+      trust.push({ icon: 'fa-shield-halved', title: 'Verified Payout', desc: '' });
+      renderTrust();
+    });
+
+    marqueeContainer.addEventListener('input', (ev) => {
+      const idx = ev.target.dataset.idx;
+      const field = ev.target.dataset.field;
+      if (idx !== undefined && field && payouts[idx]) {
+        payouts[idx][field] = ev.target.value;
+        syncJSON();
+      }
+    });
+
+    cashoutRulesContainer.addEventListener('input', (ev) => {
+      const idx = ev.target.dataset.idx;
+      const field = ev.target.dataset.field;
+      if (idx !== undefined && field) {
+        if (!rules[idx] || typeof rules[idx] !== 'object') rules[idx] = { title: '', desc: '' };
+        rules[idx][field] = ev.target.value;
+        syncJSON();
+      }
+    });
+
+    trustItemsContainer.addEventListener('input', (ev) => {
+      const idx = ev.target.dataset.idx;
+      const field = ev.target.dataset.field;
+      if (idx !== undefined && field && trust[idx]) {
+        trust[idx][field] = ev.target.value;
+        syncJSON();
+      }
+    });
+
+    renderMarquee();
+    renderRules();
+    renderTrust();
+  }
+
+  initCMSBuilders();
 
   function filterTxSearch() {
     const q = (document.getElementById('txSearchQ')?.value || '').trim().toLowerCase();

@@ -57,6 +57,9 @@
   $supportEmail = $emailCh['handle'] ?? 'support@winningheaven.com';
   $supportMailto = $emailCh['href'] ?? ('mailto:'.$supportEmail);
 @endphp
+<div class="wh-lobby" style="background:transparent;padding-bottom:0">
+  @include('partials.player-nav', ['activeTab' => 'info'])
+</div>
 <main class="wh-info">
   <div class="wh-info__glow wh-info__glow--a" aria-hidden="true"></div>
   <div class="wh-info__glow wh-info__glow--b" aria-hidden="true"></div>
@@ -64,7 +67,7 @@
 
   <div class="wh-info__inner">
     <header class="wh-info__top">
-      <a href="/login" class="wh-info__back"><i class="fa-solid fa-chevron-left"></i> Back to login</a>
+      <a href="/lobby" class="wh-info__back"><i class="fa-solid fa-chevron-left"></i> Back to lobby</a>
     </header>
 
     <section class="wh-info__hero">

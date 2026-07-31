@@ -3,15 +3,7 @@
 @section('content')
 @php $f = $frontend; $logo = $f['logo_url'] ?? '/brand/logo.png'; @endphp
 <div class="wh-lobby">
-  <nav class="wh-nav">
-    <div class="wh-brand-mark">
-      <img src="{{ asset(ltrim($logo,'/')) }}" alt="">
-      <div><strong>Refer center</strong><span>{{ $user->referral_code }}</span></div>
-    </div>
-    <div class="wh-nav__actions">
-      <a class="wh-nav__btn" href="{{ route('lobby') }}"><i class="fa-solid fa-arrow-left"></i> Lobby</a>
-    </div>
-  </nav>
+  @include('partials.player-nav', ['activeTab' => 'referrals'])
   <main class="wh-main">
     <section class="wh-tile" style="margin-bottom:1rem">
       <h2 style="font-family:var(--font-display);margin-top:0">Love Winning Heaven?</h2>

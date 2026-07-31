@@ -5,16 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="theme-color" content="#07131f">
+  @php
+    $frontend = $frontend ?? [];
+    $fav = !empty($frontend['favicon_url']) ? $frontend['favicon_url'] : ((!empty($frontend['logo_url'])) ? $frontend['logo_url'] : '/brand/logo.png');
+    $favUrl = str_starts_with($fav, 'data:') ? $fav : asset(ltrim($fav, '/'));
+    $splashLogo = ($frontend['logo_url'] ?? null) ?: '/brand/logo.png';
+  @endphp
   <title>@yield('title', 'Winning Heaven')</title>
+  <link rel="icon" type="image/png" href="{{ $favUrl }}">
+  <link rel="shortcut icon" href="{{ $favUrl }}">
+  <link rel="apple-touch-icon" href="{{ $favUrl }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="{{ asset('css/wh-fresh.css') }}">
   @stack('head')
 </head>
 <body>
-  @php
-    $frontend = $frontend ?? [];
-    $splashLogo = ($frontend['logo_url'] ?? null) ?: '/brand/logo.png';
-  @endphp
   <div class="wh-splash is-on" id="whSplash" aria-hidden="false">
     <div class="wh-splash__medal">
       <img src="{{ str_starts_with($splashLogo, 'data:') ? $splashLogo : asset(ltrim($splashLogo, '/')) }}" alt="Winning Heaven">

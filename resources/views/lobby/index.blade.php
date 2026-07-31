@@ -12,27 +12,7 @@
   $trust = $f['lobby_cashout_trust_items'] ?? [];
 @endphp
 <div class="wh-lobby">
-  <nav class="wh-nav">
-    <div class="wh-brand-mark">
-      <img src="{{ asset(ltrim($logo,'/')) }}" alt="Winning Heaven">
-      <div>
-        <strong>Winning Heaven</strong>
-        <span>{{ $user->name }} · {{ $user->referral_code }}</span>
-      </div>
-    </div>
-    <div class="wh-nav__actions">
-      @if(!empty($f['get_app_enabled']))
-        <button type="button" class="wh-nav__btn wh-nav__btn--mint" id="getAppBtn"><i class="fa-solid fa-mobile-screen-button"></i> Get App</button>
-      @endif
-      <a class="wh-nav__btn" href="{{ route('referrals') }}"><i class="fa-solid fa-gift"></i> Refer</a>
-      @if(!isset($f['info_show_on_lobby']) || !empty($f['info_show_on_lobby']))
-      @if(!isset($f['info_page_enabled']) || !empty($f['info_page_enabled']))
-      <a class="wh-nav__btn" href="{{ route('info') }}"><i class="fa-solid fa-circle-info"></i> Info</a>
-      @endif
-      @endif
-      <button type="button" class="wh-nav__btn" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
-    </div>
-  </nav>
+  @include('partials.player-nav', ['activeTab' => 'lobby'])
 
   <main class="wh-main" id="lobbyMain">
     {{-- 1. HERO: promo left + freeplay right (Jackpot flow) --}}
