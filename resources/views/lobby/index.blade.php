@@ -37,10 +37,22 @@
             <div class="wh-freeplay__amount">{{ $f['lobby_freeplay_value'] ?? '$3' }}</div>
             <div class="wh-freeplay__copy">
               <strong>{{ $f['lobby_freeplay_label'] ?? 'FREEPLAY' }}</strong>
-              <span id="fpCond">@if(($freeplayGate['phase'] ?? '') === 'pending')REQUEST PENDING@elseif(($freeplayGate['phase'] ?? '') === 'need_deposit'){{ '$'.number_format($freeplayGate['deposit_total'] ?? 0, 0) }} / $25 TO ELIGIBLE@elseif(!empty($freeplayGate['can_claim']) && empty($freeplayGate['is_first']))READY TO CLAIM@else{{ $f['lobby_freeplay_condition'] ?? 'ON SIGNUP!' }}@endif</span>
+              <span id="fpCond">
+                @if(($freeplayGate['phase'] ?? '') === 'pending')
+                  REQUEST PENDING
+                @elseif(($freeplayGate['phase'] ?? '') === 'need_deposit')
+                  ${{ number_format($freeplayGate['deposit_total'] ?? 0, 0) }} / $25 TO ELIGIBLE
+                @elseif(!empty($freeplayGate['can_claim']) && empty($freeplayGate['is_first']))
+                  READY TO CLAIM
+                @else
+                  {{ $f['lobby_freeplay_condition'] ?? 'ON SIGNUP!' }}
+                @endif
+              </span>
             </div>
           </div>
-          <button type="button" class="wh-freeplay__claim" id="claimFreeplayTop" title="@if(($freeplayGate['phase'] ?? '')==='pending')Pending…@elseif(empty($freeplayGate['can_claim']))Deposit to unlock@else{{ $f['lobby_freeplay_claim_btn'] ?? 'Claim freeplay' }}@endif" @if(empty($freeplayGate['can_claim'])) disabled @endif><i class="fa-solid fa-gift"></i></button>
+          <button type="button" class="wh-freeplay__claim" id="claimFreeplayTop" title="Claim Freeplay Bonus">
+            <i class="fa-solid fa-gift"></i>
+          </button>
         </div>
       </aside>
     </section>
@@ -156,7 +168,7 @@
             <p style="color:var(--mute);margin:.2rem 0 0;font-size:.85rem">Request ID → Deposit → Withdraw</p>
           </div>
         </div>
-        <button type="button" class="wh-portal-fp" id="portalFreeplayBtn" @if(empty($freeplayGate['can_claim'])) disabled style="opacity:.5;cursor:not-allowed" @endif>
+        <button type="button" class="wh-portal-fp" id="portalFreeplayBtn" title="Claim Freeplay">
           <i class="fa-solid fa-gift"></i> FREEPLAY
         </button>
       </div>
@@ -242,7 +254,19 @@
       <div class="wh-rail-head" style="margin-top:1.25rem"><h2 style="font-size:1.05rem">My cashouts</h2></div>
       <div id="cashoutList" style="font-size:.85rem;color:var(--mute)"></div>
     </div>
-  </div>
+  </main>
+
+  {{-- Sleek Player Footer Bar with Official Channels & Info Link --}}
+  <footer style="margin-top:2rem;padding:1.25rem 1rem;text-align:center;border-top:1px solid rgba(255,255,255,.06);color:var(--mute);font-size:.85rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+    <div>© {{ date('Y') }} Winning Heaven. All rights reserved.</div>
+    @if(!isset($f['info_page_enabled']) || !empty($f['info_page_enabled']))
+    <div>
+      <a href="{{ route('info') }}" style="color:var(--sand);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .85rem;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;transition:all .2s">
+        <i class="fa-solid fa-circle-info"></i> Official Channels & Info
+      </a>
+    </div>
+    @endif
+  </footer>
 
   {{-- Promotions modal --}}
   <div class="wh-modal" id="promoModal">
@@ -735,10 +759,26 @@ document.querySelectorAll('[data-open-game]').forEach((btn) => {
     openGame(card.dataset.title, card.dataset.image, card.dataset.link);
   });
 });
+function getFreeplayStatusExplanation() {
+  if (FP_GATE.phase === 'pending') {
+    return 'Aap ki $3 Freeplay request process ho rahi hai (PENDING). Admin / Coins Staff approval ka intezar karein!';
+  }
+  if (FP_GATE.phase === 'need_deposit') {
+    const cur = FP_GATE.deposit_total || 0;
+    return `Agla Freeplay bonus un-lock karne ke liye kam az kam $25 ka deposit zaroori hai. (Aap ka current deposit: $${cur} / $25)`;
+  }
+  if (FP_GATE.is_first || FP_GATE.phase === 'claimed') {
+    return 'Aap ne apna $3 Signup Freeplay pehle hi claim kar liya hai ($100 min cashout, $30 cap rule applied). Agla freeplay bonus deposit karne par milega!';
+  }
+  return FP_GATE.message || 'Freeplay bonus is currently locked. Deposit to unlock next bonus!';
+}
+
 async function claimFreeplayForActive(btnTarget) {
-  if (!FP_GATE.can_claim) return WH.alert(FP_GATE.message || 'Not eligible for freeplay right now.', 'Freeplay');
+  if (!FP_GATE.can_claim) {
+    return WH.alert(getFreeplayStatusExplanation(), 'Freeplay Status');
+  }
   if (!activeGame) {
-    WH.alert('Select a game first (use FREEPLAY on a game card, or open a game then claim).', 'Freeplay');
+    WH.alert('Pehle ek game select karein (Game Card se open karein ya Freeplay claim karein).', 'Freeplay Status');
     document.getElementById('gamesAnchor')?.scrollIntoView({ behavior: 'smooth' });
     return;
   }
@@ -747,19 +787,13 @@ async function claimFreeplayForActive(btnTarget) {
     const r = await WH.api('/freeplay/claim', { method:'POST', body: JSON.stringify({ game_title: activeGame.title }) });
     WH.toast('Freeplay $' + (r.amount || 3) + ' queued for ' + activeGame.title + ' — coins staff will load it.');
     FP_GATE.can_claim = false;
-    document.querySelectorAll('.wh-game-fp').forEach((b) => b.remove());
-    const top = document.getElementById('claimFreeplayTop');
-    if (top) {
-      top.disabled = true;
-      top.style.opacity = '.55';
-      top.title = 'Pending…';
-      top.innerHTML = '<i class="fa-solid fa-hourglass-half"></i>';
-    }
-    const pf = document.getElementById('portalFreeplayBtn');
-    if (pf) { pf.disabled = true; pf.style.opacity = '.5'; }
+    FP_GATE.phase = 'pending';
+    const cond = document.getElementById('fpCond');
+    if (cond) cond.textContent = 'REQUEST PENDING';
+    if (btnTarget) WH.setBtnLoading(btnTarget, false);
   } catch (e) {
     if (btnTarget) WH.setBtnLoading(btnTarget, false);
-    WH.alert(e.data?.error || e.message, 'Freeplay');
+    WH.alert(e.data?.error || e.message, 'Freeplay Status');
   }
 }
 document.querySelectorAll('[data-fp-game]').forEach((btn) => {
@@ -859,11 +893,11 @@ document.getElementById('wdSubmitBtn').onclick = async function() {
 };
 
 document.getElementById('claimFreeplayTop').onclick = async function() {
-  if (!FP_GATE.can_claim) return WH.alert(FP_GATE.message || 'Not eligible for freeplay right now.', 'Freeplay');
+  if (!FP_GATE.can_claim) {
+    return WH.alert(getFreeplayStatusExplanation(), 'Freeplay Status');
+  }
   if (!activeGame) {
-    WH.alert(FP_GATE.is_first
-      ? 'Tap FREEPLAY on a game card (or open a game) so we know which game to load freeplay on.'
-      : 'Select a game first, then claim freeplay.', 'Freeplay');
+    WH.alert('Pehle niche di gayi Games mein se koi ek game open karein, phir Freeplay claim karein!', 'Freeplay Status');
     document.getElementById('gamesAnchor')?.scrollIntoView({ behavior: 'smooth' });
     return;
   }

@@ -66,6 +66,18 @@
       @endforelse
     </div>
   </main>
+
+  {{-- Sleek Player Footer Bar --}}
+  <footer style="margin-top:2rem;padding:1.25rem 1rem;text-align:center;border-top:1px solid rgba(255,255,255,.06);color:var(--mute);font-size:.85rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+    <div>© {{ date('Y') }} Winning Heaven. All rights reserved.</div>
+    @if(!isset($f['info_page_enabled']) || !empty($f['info_page_enabled']))
+    <div>
+      <a href="{{ route('info') }}" style="color:var(--sand);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .85rem;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;transition:all .2s">
+        <i class="fa-solid fa-circle-info"></i> Official Channels & Info
+      </a>
+    </div>
+    @endif
+  </footer>
 </div>
 @endsection
 @push('scripts')
