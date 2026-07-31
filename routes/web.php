@@ -80,3 +80,40 @@ Route::get('/test-mail', function () {
         return "Mail Send Error: " . $e->getMessage() . "<br><br>File: " . $e->getFile() . ":" . $e->getLine();
     }
 });
+
+Route::get('/deploy-site', function (\Illuminate\Http\Request $request) {
+    $secret = env('DEPLOY_SECRET', 'winning_heaven_deploy_2026');
+    $token = $request->query('key') ?? $request->query('secret') ?? '';
+
+    if ($token !== $secret) {
+        return response("<b>403 Access Denied:</b> Invalid deploy secret key.<br>Usage: /deploy-site?key=winning_heaven_deploy_2026", 403);
+    }
+
+    try {
+        $baseDir = base_path();
+        $output = [];
+        $returnCode = 0;
+
+        exec("cd {$baseDir} && git pull origin main 2>&1", $output, $returnCode);
+
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:cache');
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        \Illuminate\Support\Facades\Artisan::call('route:cache');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:cache');
+
+        $gitLog = implode("\n", array_map('htmlspecialchars', $output));
+
+        return "<html><body style='font-family:sans-serif;background:#07131f;color:#fff;padding:2rem;'>" .
+               "<h2 style='color:#3ee0b2;'>🚀 Winning Heaven — Auto Deployment</h2>" .
+               "<p><b>Status:</b> " . ($returnCode === 0 ? "<span style='color:#3ee0b2;font-weight:bold'>SUCCESS</span>" : "<span style='color:#f43f5e;font-weight:bold'>CHECK OUTPUT (Code {$returnCode})</span>") . "</p>" .
+               "<b>Git Pull Output:</b><br><pre style='background:#102030;color:#3ee0b2;padding:16px;border-radius:8px;border:1px solid #1e3a5f;overflow-x:auto;'>" . ($gitLog ?: 'No output / already up-to-date') . "</pre><br>" .
+               "<p style='color:#a0aec0'>✅ Database migrations run & Laravel caches refreshed!</p>" .
+               "<br><a href='/' style='color:#3ee0b2;text-decoration:none;font-weight:bold'>← Return to Winning Heaven</a>" .
+               "</body></html>";
+    } catch (\Exception $e) {
+        return "Deployment Error: " . htmlspecialchars($e->getMessage());
+    }
+});
