@@ -235,8 +235,8 @@
               <p style="color:#cbd5e1;font-size:0.85rem;margin:0 0 .8rem 0;line-height:1.4;">
                 Download official Android APK. Auto-syncs live updates with zero reinstallations needed.
               </p>
-              <a href="/downloads/WinningHeaven.apk" download class="wh-cta" style="display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;padding:.6rem 1.2rem;font-size:.9rem;border-radius:8px;font-weight:bold;">
-                <i class="fa-solid fa-download"></i> Download WinningHeaven.apk
+              <a href="/download-player-app?v=2.0" download class="wh-cta" style="display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;padding:.6rem 1.2rem;font-size:.9rem;border-radius:8px;font-weight:bold;">
+                <i class="fa-solid fa-download"></i> Download Winning Heaven App (4.5 MB)
               </a>
             </div>
             <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:1rem;">

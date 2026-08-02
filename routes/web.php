@@ -10,29 +10,39 @@ Route::get('/info', [PortalController::class, 'info'])->name('info');
 
 Route::get('/admin/login', [PortalController::class, 'adminLogin'])->name('admin.login');
 
-// Direct APK Download routes with strict MIME headers
-Route::get('/downloads/WinningHeaven.apk', function () {
+// Direct APK Download routes (bypasses Cloudflare static cache)
+Route::get('/download-player-app', function () {
     $path = public_path('downloads/WinningHeaven.apk');
-    if (!file_exists($path)) abort(404);
-    return response()->download($path, 'WinningHeaven.apk', [
+    if (!file_exists($path)) abort(404, 'Player APK file not found.');
+    return response()->file($path, [
         'Content-Type' => 'application/vnd.android.package-archive',
+        'Content-Length' => (string) filesize($path),
         'Content-Disposition' => 'attachment; filename="WinningHeaven.apk"',
-        'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        'Cache-Control' => 'no-cache, no-store, must-revalidate, max-age=0',
         'Pragma' => 'no-cache',
-        'Expires' => '0'
+        'Expires' => 'Sat, 01 Jan 2000 00:00:00 GMT'
     ]);
+})->name('download.player');
+
+Route::get('/download-admin-app', function () {
+    $path = public_path('downloads/WHPortal.apk');
+    if (!file_exists($path)) abort(404, 'Admin APK file not found.');
+    return response()->file($path, [
+        'Content-Type' => 'application/vnd.android.package-archive',
+        'Content-Length' => (string) filesize($path),
+        'Content-Disposition' => 'attachment; filename="WHPortal.apk"',
+        'Cache-Control' => 'no-cache, no-store, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+        'Expires' => 'Sat, 01 Jan 2000 00:00:00 GMT'
+    ]);
+})->name('download.admin');
+
+Route::get('/downloads/WinningHeaven.apk', function () {
+    return redirect()->route('download.player');
 });
 
 Route::get('/downloads/WHPortal.apk', function () {
-    $path = public_path('downloads/WHPortal.apk');
-    if (!file_exists($path)) abort(404);
-    return response()->download($path, 'WHPortal.apk', [
-        'Content-Type' => 'application/vnd.android.package-archive',
-        'Content-Disposition' => 'attachment; filename="WHPortal.apk"',
-        'Cache-Control' => 'no-cache, no-store, must-revalidate',
-        'Pragma' => 'no-cache',
-        'Expires' => '0'
-    ]);
+    return redirect()->route('download.admin');
 });
 
 Route::middleware('auth')->group(function () {

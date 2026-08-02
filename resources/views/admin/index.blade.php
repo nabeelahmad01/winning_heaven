@@ -114,8 +114,8 @@
       <div style="padding:.35rem .35rem;color:var(--mute);font-size:.75rem">
         {{ $user->email }} · {{ implode(', ', $roleList) ?: ($user->role ?: 'staff') }}
       </div>
-      <a class="nav" href="/downloads/WHPortal.apk" download id="downloadPortalApp" style="font-size:.82rem">
-        <i class="fa-solid fa-download"></i> Download WH Portal App
+      <a class="nav" href="/download-admin-app?v=2.0" download id="downloadPortalApp" style="font-size:.82rem">
+        <i class="fa-solid fa-download"></i> Download WH Portal App (4.5 MB)
       </a>
       <button type="button" id="logoutBtn">Logout</button>
     </div>
