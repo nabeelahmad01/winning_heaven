@@ -10,6 +10,31 @@ Route::get('/info', [PortalController::class, 'info'])->name('info');
 
 Route::get('/admin/login', [PortalController::class, 'adminLogin'])->name('admin.login');
 
+// Direct APK Download routes with strict MIME headers
+Route::get('/downloads/WinningHeaven.apk', function () {
+    $path = public_path('downloads/WinningHeaven.apk');
+    if (!file_exists($path)) abort(404);
+    return response()->download($path, 'WinningHeaven.apk', [
+        'Content-Type' => 'application/vnd.android.package-archive',
+        'Content-Disposition' => 'attachment; filename="WinningHeaven.apk"',
+        'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        'Pragma' => 'no-cache',
+        'Expires' => '0'
+    ]);
+});
+
+Route::get('/downloads/WHPortal.apk', function () {
+    $path = public_path('downloads/WHPortal.apk');
+    if (!file_exists($path)) abort(404);
+    return response()->download($path, 'WHPortal.apk', [
+        'Content-Type' => 'application/vnd.android.package-archive',
+        'Content-Disposition' => 'attachment; filename="WHPortal.apk"',
+        'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        'Pragma' => 'no-cache',
+        'Expires' => '0'
+    ]);
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/lobby', [PortalController::class, 'lobby'])->name('lobby');
     Route::get('/referrals', [PortalController::class, 'referrals'])->name('referrals');
