@@ -557,7 +557,27 @@
     WH.initAudioUnlock();
     window.addEventListener('load', () => WH.hideSplash(500));
     setTimeout(() => WH.hideSplash(0), 2500);
+
+    // Hardware Back Button Navigation for Native App
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.addListener('backButton', () => {
+          const path = window.location.pathname;
+          if (path !== '/' && path !== '/lobby' && path !== '/admin/login' && window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.Capacitor.Plugins.App.minimizeApp();
+          }
+        });
+      }
+    });
   </script>
+  <style>
+    /* Safe Area Top Padding for Status Bar */
+    .wh-nav {
+      padding-top: max(0.5rem, env(safe-area-inset-top, 0px)) !important;
+    }
+  </style>
   @stack('scripts')
 </body>
 </html>
