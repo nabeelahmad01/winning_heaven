@@ -1,4 +1,56 @@
 @extends('layouts.app')
+@push('head')
+<style>
+  /* Core layout fixes targeting desktop to override any cached static CSS */
+  .wh-mobile-toggle {
+    display: none !important;
+  }
+  .wh-mobile-overlay {
+    display: none !important;
+  }
+  .wh-support-grid {
+    display: grid !important;
+    grid-template-columns: 300px 1fr !important;
+    gap: .85rem !important;
+    min-height: 450px !important;
+  }
+  .wh-support-back {
+    display: none !important;
+  }
+
+  /* Responsive styling rules */
+  @media (max-width: 900px) {
+    .wh-mobile-toggle {
+      display: flex !important;
+    }
+    .wh-mobile-overlay.is-on {
+      display: block !important;
+    }
+    .wh-support-grid {
+      grid-template-columns: 1fr !important;
+      gap: 0 !important;
+      min-height: auto !important;
+    }
+    .wh-support-grid > .wh-tile:first-child {
+      display: block !important;
+      max-height: none !important;
+    }
+    .wh-support-grid > .wh-tile:last-child {
+      display: none !important;
+    }
+    .wh-support-grid.chat-open > .wh-tile:first-child {
+      display: none !important;
+    }
+    .wh-support-grid.chat-open > .wh-tile:last-child {
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    .wh-support-grid.chat-open .wh-support-back {
+      display: inline-flex !important;
+    }
+  }
+</style>
+@endpush
 @section('title', ($portalName ?? 'HQ') . ' — Winning Heaven')
 @section('content')
 @php
@@ -2829,7 +2881,20 @@
   if (threadsEl) {
     try { supportThreads = JSON.parse(threadsEl.textContent || '[]'); } catch (_) { supportThreads = []; }
   }
-  const threadMap = Object.fromEntries(supportThreads.map((t) => [t.email, t.messages || []]));
+  const threadMap = {};
+  if (supportThreads && typeof supportThreads.forEach === 'function') {
+    supportThreads.forEach((t) => {
+      if (t && t.email) {
+        threadMap[t.email.toLowerCase().trim()] = t.messages || [];
+      }
+    });
+  } else if (supportThreads && typeof supportThreads === 'object') {
+    Object.values(supportThreads).forEach((t) => {
+      if (t && t.email) {
+        threadMap[t.email.toLowerCase().trim()] = t.messages || [];
+      }
+    });
+  }
   let activeSupportEmail = '';
   let supportPollTimer = null;
 
