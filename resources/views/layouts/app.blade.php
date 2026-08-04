@@ -65,12 +65,12 @@
   <div class="wh-toast-wrap" id="whToastWrap" aria-live="polite"></div>
 
   <!-- Floating Live Support Chat Trigger (Jackpot Parity) -->
-  <button type="button" class="wh-chat-trigger" id="whChatTrigger" onclick="WH.openSupportChat()" title="Live Support Chat">
-    <div class="wh-chat-trigger__inner">
+  <button type="button" class="wh-chat-trigger" id="whChatTrigger" onclick="WH.openSupportChat()" title="Live Support Chat" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:0.6rem;padding:0">
+    <div class="wh-chat-trigger__inner" style="width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#3ee0b2,#10b981);color:#041018;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 8px 25px rgba(62,224,178,0.5);position:relative;border:2px solid rgba(255,255,255,0.4)">
       <i class="fa-solid fa-headset"></i>
       <span class="wh-chat-trigger__badge" id="whChatUnreadBadge" style="display:none">0</span>
     </div>
-    <span class="wh-chat-trigger__tooltip">Live Support</span>
+    <span class="wh-chat-trigger__tooltip" style="background:rgba(11,20,32,0.94);color:#fff;border:1px solid rgba(62,224,178,0.4);padding:0.45rem 0.9rem;border-radius:20px;font-size:0.82rem;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,0.4)">Live Support</span>
   </button>
 
   <div class="wh-chat" id="whChat" aria-hidden="true">
@@ -94,6 +94,27 @@
       <div class="wh-chat__preview" id="whChatPreview" style="display:none">
         <img id="whChatPreviewImg" alt="">
         <button type="button" id="whChatPreviewClear">&times;</button>
+      </div>
+    </div>
+  </div>
+
+  {{-- VIP Push Notification & Bonus Subscribe Modal (Jackpot Parity) --}}
+  <div class="wh-modal" id="whSubPromptModal" style="display:none;z-index:9990">
+    <div class="wh-modal__card" style="max-width:440px;text-align:center;padding:2rem 1.5rem">
+      <div style="width:68px;height:68px;margin:0 auto 1.25rem;border-radius:50%;background:rgba(62,224,178,0.12);border:2px solid #3ee0b2;display:flex;align-items:center;justify-content:center;font-size:1.85rem;color:#3ee0b2;box-shadow:0 0 25px rgba(62,224,178,0.3)">
+        <i class="fa-solid fa-bell"></i>
+      </div>
+      <h3 style="font-family:var(--font-display);font-size:1.35rem;color:#fff;margin:0 0 0.6rem">Unlock VIP Promos & Bonuses!</h3>
+      <p style="font-size:0.85rem;color:var(--mute);line-height:1.5;margin:0 0 1.5rem">
+        Subscribe to our official Winning Heaven notifications & newsletter to receive exclusive first deposit bonuses, freeplay coins, and daily game updates directly.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:0.65rem">
+        <button type="button" class="wh-cta wh-cta--wide" id="whSubPromptBtn" style="font-size:0.95rem;padding:0.85rem;font-weight:bold">
+          <i class="fa-solid fa-bell"></i> SUBSCRIBE NOW
+        </button>
+        <button type="button" class="wh-nav__btn" id="whSubPromptDismissBtn" style="background:transparent;color:var(--mute);border:none;padding:0.4rem;font-size:0.82rem;cursor:pointer">
+          Maybe Later
+        </button>
       </div>
     </div>
   </div>
@@ -575,6 +596,50 @@
         await WH.sendSupportChat(msg);
       } catch (err) {
         WH.toast(err.message || 'Could not send', 'error');
+      }
+    });
+
+    WH.checkVipSubscribePrompt = function(user) {
+      if (sessionStorage.getItem('wh_sub_dismissed') === '1') return;
+      if (user && (user.is_subscribed || user.isSubscribed)) return;
+      const modal = document.getElementById('whSubPromptModal');
+      if (modal) {
+        modal.classList.add('is-on');
+        modal.style.display = 'flex';
+      }
+    };
+
+    document.getElementById('whSubPromptDismissBtn')?.addEventListener('click', () => {
+      sessionStorage.setItem('wh_sub_dismissed', '1');
+      const modal = document.getElementById('whSubPromptModal');
+      if (modal) {
+        modal.classList.remove('is-on');
+        modal.style.display = 'none';
+      }
+    });
+
+    document.getElementById('whSubPromptBtn')?.addEventListener('click', async function() {
+      const btn = this;
+      WH.setBtnLoading(btn, true, 'SUBSCRIBING…');
+      try {
+        if ('Notification' in window && Notification.permission === 'default') {
+          try { await Notification.requestPermission(); } catch (_) {}
+        }
+        await WH.api('/users/subscribe', { method: 'POST', body: JSON.stringify({ is_subscribed: true }) });
+        WH.toast('Thank you for subscribing to VIP promos!', 'success');
+        sessionStorage.setItem('wh_sub_dismissed', '1');
+        const modal = document.getElementById('whSubPromptModal');
+        if (modal) {
+          modal.classList.remove('is-on');
+          modal.style.display = 'none';
+        }
+        if (window.__WH_USER) {
+          window.__WH_USER.is_subscribed = true;
+        }
+      } catch (err) {
+        WH.toast(err.message || 'Could not subscribe', 'error');
+      } finally {
+        WH.setBtnLoading(btn, false);
       }
     });
     WH.initAudioUnlock();

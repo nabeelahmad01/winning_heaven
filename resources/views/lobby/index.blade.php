@@ -1027,10 +1027,14 @@ function showPromo(p) {
 document.getElementById('promoDismissBtn')?.addEventListener('click', () => dismissPromo(currentPromo?.public_id, false));
 document.getElementById('promoClaimBtn')?.addEventListener('click', async function() {
   if (!currentPromo) return;
+  const isSubscribed = {!! json_encode((bool) ($user->is_subscribed ?? false)) !!};
+  if (!isSubscribed) {
+    WH.checkVipSubscribePrompt({ is_subscribed: false });
+  }
   WH.setBtnLoading(this, true, 'CLAIMING…');
   try {
     await WH.api('/promotions/claim', { method: 'POST', body: JSON.stringify({ public_id: currentPromo.public_id }) });
-    WH.toast('Promotion claimed');
+    WH.toast('Promotion claimed!');
     dismissPromo(currentPromo.public_id, true);
   } catch (e) {
     WH.toast(e.message || 'Could not claim', 'error');
@@ -1052,20 +1056,10 @@ document.getElementById('promoClaimBtn')?.addEventListener('click', async functi
 })();
 (async function subscribeVipPrompt() {
   try {
-    if (localStorage.getItem('wh_subscribed_once') === '1') return;
-    const already = {!! json_encode((bool) ($user->is_subscribed ?? false)) !!};
-    if (already) {
-      localStorage.setItem('wh_subscribed_once', '1');
-      return;
-    }
-    const ok = await WH.confirm(
-      'Get VIP promo alerts in lobby (and email when SMTP is on)? Same subscribe flow as Jackpot.',
-      'Winning Heaven VIP'
-    );
-    localStorage.setItem('wh_subscribed_once', '1');
-    if (!ok) return;
-    await WH.api('/users/subscribe', { method: 'POST', body: JSON.stringify({ is_subscribed: true }) });
-    WH.toast('You are subscribed to promotions');
+    const userObj = {
+      is_subscribed: {!! json_encode((bool) ($user->is_subscribed ?? false)) !!}
+    };
+    WH.checkVipSubscribePrompt(userObj);
   } catch (_) {}
 })();
 </script>

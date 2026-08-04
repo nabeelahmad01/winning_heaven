@@ -5233,3 +5233,74 @@ html.player-native-shell .player-lobby-scroll {
 .lobby-nav-btn.info-nav-btn:hover {
   background: rgba(255, 215, 0, 0.18);
 }
+
+/* Floating Live Support Widget Button (Jackpot Parity) */
+.wh-chat-trigger {
+  position: fixed !important;
+  bottom: 1.5rem !important;
+  right: 1.5rem !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: 9999 !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.6rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  text-decoration: none !important;
+}
+.wh-chat-trigger:hover {
+  transform: translateY(-3px) scale(1.05) !important;
+}
+.wh-chat-trigger__inner {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #3ee0b2, #10b981) !important;
+  color: #041018 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.5rem !important;
+  box-shadow: 0 8px 25px rgba(62,224,178,0.5), 0 0 15px rgba(62,224,178,0.3) !important;
+  position: relative !important;
+  border: 2px solid rgba(255,255,255,0.4) !important;
+}
+.wh-chat-trigger__badge {
+  position: absolute !important;
+  top: -4px !important;
+  right: -4px !important;
+  background: #ef4444 !important;
+  color: #fff !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  padding: 2px 6px !important;
+  border-radius: 999px !important;
+  border: 2px solid #0b1420 !important;
+}
+.wh-chat-trigger__tooltip {
+  background: rgba(11, 20, 32, 0.94) !important;
+  color: #fff !important;
+  border: 1px solid rgba(62,224,178,0.4) !important;
+  padding: 0.45rem 0.9rem !important;
+  border-radius: 20px !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  backdrop-filter: blur(8px) !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4) !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
+}
+
+@media (max-width: 768px) {
+  .wh-chat-trigger {
+    bottom: 1rem !important;
+    right: 1rem !important;
+  }
+  .wh-chat-trigger__tooltip {
+    display: none !important;
+  }
+}
