@@ -2884,23 +2884,30 @@
     if (!email) return;
     activeSupportEmail = email;
     let userName = email;
-    const activeBtn = document.querySelector(`.support-thread-btn[data-email="${CSS.escape(email)}"]`);
-    if (activeBtn && activeBtn.dataset.name) {
-      userName = activeBtn.dataset.name;
-    }
     document.querySelectorAll('.support-thread-btn').forEach((b) => {
-      b.style.background = b.dataset.email === email ? 'rgba(62,224,178,.18)' : 'transparent';
+      const isMatch = b.dataset.email === email;
+      b.style.background = isMatch ? 'rgba(62,224,178,.18)' : 'transparent';
+      if (isMatch && b.dataset.name) {
+        userName = b.dataset.name;
+      }
     });
     const meta = document.getElementById('supportThreadMeta');
     const form = document.getElementById('supportReplyForm');
     const emailInput = document.getElementById('supportReplyEmail');
     if (meta) {
-      meta.innerHTML = '<strong style="color:var(--sand);font-size:1.05rem">' + (userName.replace(/</g, '&lt;')) + '</strong> <span style="color:var(--mute);font-size:.8rem;margin-left:.4rem">(' + (email.replace(/</g, '&lt;')) + ')</span> <span class="wh-badge" style="margin-left:.6rem;font-size:.7rem">Active Conversation</span>';
+      meta.innerHTML = '<strong style="color:var(--sand);font-size:1.05rem">' + (String(userName).replace(/</g, '&lt;')) + '</strong> <span style="color:var(--mute);font-size:.8rem;margin-left:.4rem">(' + (String(email).replace(/</g, '&lt;')) + ')</span> <span class="wh-badge" style="margin-left:.6rem;font-size:.7rem">Active Conversation</span>';
     }
     if (emailInput) emailInput.value = email;
     if (form) form.style.display = 'flex';
-    // Show cached instantly, then fetch fresh
-    renderSupportMessages(threadMap[email] || []);
+
+    const cached = threadMap[email];
+    if (cached && cached.length) {
+      renderSupportMessages(cached);
+    } else {
+      const body = document.getElementById('supportThreadBody');
+      if (body) body.innerHTML = '<p style="color:var(--mute);padding:.5rem"><i class="fa-solid fa-spinner fa-spin"></i> Loading messages…</p>';
+    }
+
     fetchSupportThread(email, true);
     if (supportPollTimer) clearInterval(supportPollTimer);
     supportPollTimer = setInterval(() => {
@@ -2916,6 +2923,16 @@
       openSupportThread(btn.dataset.email);
     }
   });
+
+  // Auto-open first conversation thread if available
+  setTimeout(() => {
+    if (!activeSupportEmail) {
+      const firstBtn = document.querySelector('.support-thread-btn');
+      if (firstBtn && firstBtn.dataset.email) {
+        openSupportThread(firstBtn.dataset.email);
+      }
+    }
+  }, 200);
 
   let supportReplyAttachment = '';
   document.getElementById('supportReplyFile')?.addEventListener('change', async (e) => {
