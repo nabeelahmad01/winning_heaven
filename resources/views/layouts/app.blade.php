@@ -216,39 +216,46 @@
       },
       playNotificationSound(customUrl) {
         const now = Date.now();
-        if (now - this._lastSoundAt < 1800) return false;
+        if (now - (this._lastSoundAt || 0) < 1200) return false;
         this._lastSoundAt = now;
-        const url = customUrl || this.notificationSoundUrl;
         const playSynth = () => {
           try {
             const Ctx = window.AudioContext || window.webkitAudioContext;
             if (!Ctx) return;
             this._audioCtx = this._audioCtx || new Ctx();
-            if (this._audioCtx.state === 'suspended') this._audioCtx.resume().catch(() => {});
+            if (this._audioCtx.state === 'suspended') {
+              this._audioCtx.resume().catch(() => {});
+            }
             const ctx = this._audioCtx;
-            const tone = (freq, start, dur) => {
+            const tone = (freq, start, dur, type = 'sine') => {
               const osc = ctx.createOscillator();
               const gain = ctx.createGain();
-              osc.connect(gain); gain.connect(ctx.destination);
-              osc.type = 'sine';
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.type = type;
               osc.frequency.setValueAtTime(freq, start);
-              gain.gain.setValueAtTime(0.12, start);
+              gain.gain.setValueAtTime(0.25, start);
               gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
-              osc.start(start); osc.stop(start + dur);
+              osc.start(start);
+              osc.stop(start + dur);
             };
-            const t0 = ctx.currentTime;
-            tone(523.25, t0, 0.12);
-            tone(659.25, t0 + 0.08, 0.25);
+            const t0 = ctx.currentTime + 0.02;
+            tone(587.33, t0, 0.12, 'triangle');
+            tone(880.00, t0 + 0.08, 0.15, 'sine');
+            tone(1174.66, t0 + 0.18, 0.35, 'sine');
           } catch (_) {}
         };
         try {
+          const url = customUrl || this.notificationSoundUrl;
           if (url) {
-            const clean = String(url).replace(/^data:video\/[^;]+;/, 'data:audio/mpeg;');
-            const audio = new Audio(clean);
-            audio.play().catch(() => playSynth());
-            return true;
+            const audio = new Audio(url);
+            const p = audio.play();
+            if (p && p.catch) {
+              p.catch(() => playSynth());
+            }
+          } else {
+            playSynth();
           }
-          playSynth();
           return true;
         } catch (_) {
           playSynth();

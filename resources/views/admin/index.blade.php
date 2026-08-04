@@ -872,38 +872,49 @@
     @if($canPane('support'))
     <div class="wh-pane {{ $firstPane === 'support' ? 'is-on' : '' }}" id="pane-support">
       <h2 style="font-family:var(--font-display)">Support inbox</h2>
-      <div class="wh-bento" style="display:grid;grid-template-columns:280px 1fr;gap:.85rem;min-height:420px">
+      <div class="wh-bento" style="display:grid;grid-template-columns:300px 1fr;gap:.85rem;min-height:450px">
         <div class="wh-tile" style="padding:.5rem;overflow:auto;max-height:70vh">
           @forelse($supportThreads as $email => $msgs)
-            @php $last = $msgs->first(); @endphp
+            @php 
+              $last = $msgs->first();
+              $displayName = $last->user_name ?: $email;
+              $unreadCount = $msgs->where('sender_type', 'player')->where('read', false)->count();
+            @endphp
             <button
               type="button"
               class="support-thread-btn"
               data-email="{{ $email }}"
-              style="display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:.7rem .65rem;border-radius:12px;cursor:pointer;margin-bottom:.2rem"
+              data-name="{{ $displayName }}"
+              style="display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:.7rem .65rem;border-radius:12px;cursor:pointer;margin-bottom:.25rem;position:relative"
             >
-              <strong style="display:block;font-size:.85rem">{{ $email }}</strong>
-              <span style="color:var(--mute);font-size:.72rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ \Illuminate\Support\Str::limit($last->message ?? '', 48) }}</span>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:.35rem">
+                <strong style="display:block;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $displayName }}</strong>
+                @if($unreadCount > 0)
+                  <span class="wh-nav-badge is-mint" style="font-size:.68rem;padding:2px 6px;margin-left:4px;flex-shrink:0">{{ $unreadCount }}</span>
+                @endif
+              </div>
+              <span style="color:var(--mute);font-size:.72rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">{{ $email }}</span>
+              <span style="color:var(--mute);font-size:.7rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;opacity:0.8">{{ \Illuminate\Support\Str::limit($last->message ?? 'Attachment', 45) }}</span>
             </button>
           @empty
             <p style="color:var(--mute);padding:.65rem">No messages</p>
           @endforelse
         </div>
-        <div class="wh-tile" style="display:flex;flex-direction:column;min-height:420px">
+        <div class="wh-tile" style="display:flex;flex-direction:column;min-height:450px">
           <div id="supportThreadMeta" style="color:var(--mute);font-size:.85rem;margin-bottom:.75rem">Select a thread</div>
-          <div id="supportThreadBody" style="flex:1;overflow:auto;max-height:50vh;margin-bottom:.85rem">
+          <div id="supportThreadBody" style="flex:1;overflow:auto;max-height:52vh;margin-bottom:.85rem">
             <p style="color:var(--mute)">Pick a player conversation on the left.</p>
           </div>
           <form id="supportReplyForm" style="display:none;gap:.55rem">
             <input type="hidden" id="supportReplyEmail" name="user_email">
-            <div class="wh-field" style="margin:0">
+            <div class="wh-field" style="margin:0;flex:1">
               <label>Reply</label>
               <div class="box"><input id="supportReplyMsg" name="message" placeholder="Type reply…"></div>
             </div>
             <label class="wh-upload" style="margin:0">
               <input type="file" id="supportReplyFile" accept="image/*">
               <i class="fa-solid fa-paperclip"></i>
-              <div>Attach screenshot (optional)</div>
+              <div>Attach image</div>
               <img id="supportReplyPreview" alt="" style="display:none">
             </label>
             <button class="wh-cta" type="submit">Send reply</button>
@@ -2872,13 +2883,20 @@
   function openSupportThread(email) {
     if (!email) return;
     activeSupportEmail = email;
+    let userName = email;
+    const activeBtn = document.querySelector(`.support-thread-btn[data-email="${CSS.escape(email)}"]`);
+    if (activeBtn && activeBtn.dataset.name) {
+      userName = activeBtn.dataset.name;
+    }
     document.querySelectorAll('.support-thread-btn').forEach((b) => {
       b.style.background = b.dataset.email === email ? 'rgba(62,224,178,.18)' : 'transparent';
     });
     const meta = document.getElementById('supportThreadMeta');
     const form = document.getElementById('supportReplyForm');
     const emailInput = document.getElementById('supportReplyEmail');
-    if (meta) meta.innerHTML = '<strong style="color:var(--sand);font-size:1rem">' + email + '</strong> <span class="wh-badge" style="margin-left:.5rem;font-size:.7rem">Active Conversation</span>';
+    if (meta) {
+      meta.innerHTML = '<strong style="color:var(--sand);font-size:1.05rem">' + (userName.replace(/</g, '&lt;')) + '</strong> <span style="color:var(--mute);font-size:.8rem;margin-left:.4rem">(' + (email.replace(/</g, '&lt;')) + ')</span> <span class="wh-badge" style="margin-left:.6rem;font-size:.7rem">Active Conversation</span>';
+    }
     if (emailInput) emailInput.value = email;
     if (form) form.style.display = 'flex';
     // Show cached instantly, then fetch fresh
@@ -3056,21 +3074,26 @@
         const last = msgs[msgs.length - 1] || msgs[0] || {};
         const unreadCount = msgs.filter(m => m.sender_type === 'player' && !m.read).length;
         const isSelected = activeSupportEmail === email;
+        const displayName = last.user_name || email;
 
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'support-thread-btn';
         btn.dataset.email = email;
-        btn.style.cssText = 'display:block;width:100%;text-align:left;border:0;background:' + (isSelected ? 'rgba(62,224,178,.18)' : 'transparent') + ';color:var(--ink);padding:.7rem .65rem;border-radius:12px;cursor:pointer;margin-bottom:.2rem;position:relative';
+        btn.dataset.name = displayName;
+        btn.style.cssText = 'display:block;width:100%;text-align:left;border:0;background:' + (isSelected ? 'rgba(62,224,178,.18)' : 'transparent') + ';color:var(--ink);padding:.7rem .65rem;border-radius:12px;cursor:pointer;margin-bottom:.25rem;position:relative';
 
         const textSnippet = String(last.message || (last.attachment ? 'Image Attachment' : '')).replace(/</g, '&lt;');
+        const safeName = String(displayName).replace(/</g, '&lt;');
+        const safeEmail = String(email).replace(/</g, '&lt;');
         
         btn.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:.35rem">
-            <strong style="display:block;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${email}</strong>
+            <strong style="display:block;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safeName}</strong>
             ${unreadCount > 0 ? `<span class="wh-nav-badge is-mint" style="font-size:.68rem;padding:2px 6px;margin-left:4px;flex-shrink:0">${unreadCount}</span>` : ''}
           </div>
-          <span style="color:var(--mute);font-size:.72rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${textSnippet}</span>
+          <span style="color:var(--mute);font-size:.72rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${safeEmail}</span>
+          <span style="color:var(--mute);font-size:.7rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;opacity:0.8">${textSnippet}</span>
         `;
         list.appendChild(btn);
       });

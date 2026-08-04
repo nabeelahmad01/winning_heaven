@@ -239,21 +239,27 @@ class PortalController extends Controller
             'distributors' => Distributor::query()->latest()->get(),
             'agents' => Agent::query()->latest()->get(),
             'support' => SupportMessage::query()->latest()->limit(100)->get(),
+            'supportThreads' => SupportMessage::query()->latest()->limit(300)->get()->groupBy(function ($m) {
+                return strtolower(trim((string) $m->user_email));
+            }),
             'campaigns' => CampaignRequest::query()->latest()->limit(50)->get(),
             'ledger' => Transaction::query()->latest()->limit(100)->get(),
             'promotions' => Promotion::query()->latest()->limit(100)->get(),
             'shiftReports' => ShiftReport::query()->latest()->limit(50)->get(),
             'deletedPlayers' => DeletedUser::query()->latest('deleted_at')->limit(100)->get(),
-            'jsSupportThreads' => SupportMessage::query()->latest()->limit(200)->get()
-                ->groupBy('user_email')
+            'jsSupportThreads' => SupportMessage::query()->latest()->limit(300)->get()
+                ->groupBy(function ($m) { return strtolower(trim((string) $m->user_email)); })
                 ->map(function ($msgs, $email) {
+                    $first = $msgs->first();
                     return [
                         'email' => $email,
-                        // Bodies + images loaded live via GET /api/support?email= (avoids huge SSR page)
+                        'name' => $first?->user_name ?: $email,
+                        'unread_count' => $msgs->filter(fn($m) => $m->sender_type === 'player' && !$m->read)->count(),
                         'messages' => $msgs->sortBy('created_at')->values()->map(fn ($m) => [
                             'public_id' => $m->public_id,
                             'sender_type' => $m->sender_type,
                             'message' => $m->message,
+                            'user_name' => $m->user_name,
                             'has_attachment' => (bool) ($m->has_attachment || $m->attachment),
                             'created_at' => (string) $m->created_at,
                         ])->all(),
