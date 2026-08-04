@@ -79,7 +79,7 @@
       if ($canPane($key)) { $firstPane = $key; break; }
     }
   }
-  $supportThreads = collect($support)->groupBy('user_email');
+  $supportThreads = collect($support)->groupBy(function ($m) { return strtolower(trim((string) $m->user_email)); });
   $promotions = $promotions ?? collect();
   $shiftReports = $shiftReports ?? collect();
   $deletedPlayers = $deletedPlayers ?? collect();
@@ -90,7 +90,9 @@
   $ledgerWithdraws = collect($pendingWithdraws ?? [])->filter(fn ($t) => strtoupper((string) $t->status) === 'PENDING');
 @endphp
 <div class="wh-admin">
-  <aside class="wh-aside">
+  <button type="button" class="wh-mobile-toggle" id="mobileMenuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+  <div class="wh-mobile-overlay" id="mobileMenuOverlay"></div>
+  <aside class="wh-aside" id="adminAside">
     <div class="brand">
       <img src="{{ asset(ltrim($logo,'/')) }}" alt="">
       <div>
@@ -872,7 +874,7 @@
     @if($canPane('support'))
     <div class="wh-pane {{ $firstPane === 'support' ? 'is-on' : '' }}" id="pane-support">
       <h2 style="font-family:var(--font-display)">Support inbox</h2>
-      <div class="wh-bento" style="display:grid;grid-template-columns:300px 1fr;gap:.85rem;min-height:450px">
+      <div class="wh-support-grid" id="supportGrid">
         <div class="wh-tile" style="padding:.5rem;overflow:auto;max-height:70vh">
           @forelse($supportThreads as $email => $msgs)
             @php 
@@ -901,6 +903,7 @@
           @endforelse
         </div>
         <div class="wh-tile" style="display:flex;flex-direction:column;min-height:480px">
+          <button type="button" class="wh-support-back" id="supportBackBtn"><i class="fa-solid fa-arrow-left"></i> Back to threads</button>
           <div id="supportThreadMeta" style="color:var(--mute);font-size:.85rem;padding-bottom:.65rem;border-bottom:1px solid var(--line);margin-bottom:.85rem">Select a thread on the left</div>
           <div id="supportThreadBody" style="flex:1;overflow:auto;max-height:50vh;margin-bottom:.85rem;padding-right:.4rem">
             <p style="color:var(--mute)">Pick a player conversation on the left to start replying.</p>
@@ -950,7 +953,7 @@
       <h2 style="font-family:var(--font-display)">Staff accounts</h2>
       <div class="wh-tile" style="margin-bottom:1rem">
         <form id="staffForm" class="wh-bento" style="display:grid;gap:.6rem">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.55rem">
+          <div class="wh-admin-form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.55rem">
             <div class="wh-field" style="margin:0"><label>Name</label><div class="box"><input name="name" required></div></div>
             <div class="wh-field" style="margin:0"><label>Email</label><div class="box"><input name="email" type="email" required></div></div>
             <div class="wh-field" style="margin:0"><label>Password</label><div class="box"><input name="password" type="text" value="staff123" required></div></div>
@@ -1482,7 +1485,10 @@
   }
 
   document.querySelectorAll('.wh-aside button[data-pane]').forEach((btn) => {
-    btn.onclick = () => showPane(btn.dataset.pane, true);
+    btn.onclick = () => {
+      showPane(btn.dataset.pane, true);
+      closeMobileSidebar();
+    };
   });
   window.addEventListener('popstate', (e) => {
     const pane = (e.state && e.state.adminTab) || (window.location.pathname.split('/').filter(Boolean)[1]) || 'dashboard';
@@ -1497,6 +1503,24 @@
       history.replaceState({ adminTab: pane }, '', url);
     }
   })();
+
+  // ===== MOBILE SIDEBAR TOGGLE =====
+  function openMobileSidebar() {
+    const aside = document.getElementById('adminAside');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    if (aside) aside.classList.add('is-open');
+    if (overlay) overlay.classList.add('is-on');
+  }
+  function closeMobileSidebar() {
+    const aside = document.getElementById('adminAside');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    if (aside) aside.classList.remove('is-open');
+    if (overlay) overlay.classList.remove('is-on');
+  }
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  const mobileOverlay = document.getElementById('mobileMenuOverlay');
+  if (mobileBtn) mobileBtn.addEventListener('click', openMobileSidebar);
+  if (mobileOverlay) mobileOverlay.addEventListener('click', closeMobileSidebar);
 
   function removeTxRow(id) {
     completedActionIds[id] = true;
@@ -2865,6 +2889,7 @@
 
   async function fetchSupportThread(email, silent) {
     if (!email) return;
+    email = String(email).toLowerCase().trim();
     try {
       const d = await WH.api('/support?email=' + encodeURIComponent(email));
       const msgs = (d.items || []).slice().reverse();
@@ -2878,6 +2903,7 @@
 
   function openSupportThread(email) {
     if (!email) return;
+    email = String(email).toLowerCase().trim();
     activeSupportEmail = email;
     let userName = email;
     document.querySelectorAll('.support-thread-btn').forEach((b) => {
@@ -2890,11 +2916,14 @@
     const meta = document.getElementById('supportThreadMeta');
     const form = document.getElementById('supportReplyForm');
     const emailInput = document.getElementById('supportReplyEmail');
+    const grid = document.getElementById('supportGrid');
     if (meta) {
       meta.innerHTML = '<strong style="color:var(--sand);font-size:1.05rem">' + (String(userName).replace(/</g, '&lt;')) + '</strong> <span style="color:var(--mute);font-size:.8rem;margin-left:.4rem">(' + (String(email).replace(/</g, '&lt;')) + ')</span> <span class="wh-badge" style="margin-left:.6rem;font-size:.7rem">Active Conversation</span>';
     }
     if (emailInput) emailInput.value = email;
     if (form) form.style.display = 'flex';
+    // Mobile: show chat panel, hide thread list
+    if (grid) grid.classList.add('chat-open');
 
     const cached = threadMap[email];
     if (cached && cached.length) {
@@ -2904,11 +2933,21 @@
       if (body) body.innerHTML = '<p style="color:var(--mute);padding:.5rem"><i class="fa-solid fa-spinner fa-spin"></i> Loading messages…</p>';
     }
 
-    fetchSupportThread(email, true);
+    // Always fetch fresh from API
+    fetchSupportThread(email, false);
     if (supportPollTimer) clearInterval(supportPollTimer);
     supportPollTimer = setInterval(() => {
       if (activeSupportEmail) fetchSupportThread(activeSupportEmail, true);
     }, 2500);
+  }
+
+  // Mobile: back button to return to thread list
+  const supportBackBtn = document.getElementById('supportBackBtn');
+  if (supportBackBtn) {
+    supportBackBtn.addEventListener('click', function() {
+      const grid = document.getElementById('supportGrid');
+      if (grid) grid.classList.remove('chat-open');
+    });
   }
 
   // Global event delegation for support thread selection
@@ -2916,13 +2955,14 @@
     const btn = e.target.closest('.support-thread-btn');
     if (btn && btn.dataset.email) {
       e.preventDefault();
+      e.stopPropagation();
       openSupportThread(btn.dataset.email);
     }
   });
 
-  // Auto-open first conversation thread if available
+  // Auto-open first conversation thread if available (desktop only)
   setTimeout(() => {
-    if (!activeSupportEmail) {
+    if (!activeSupportEmail && window.innerWidth > 900) {
       const firstBtn = document.querySelector('.support-thread-btn');
       if (firstBtn && firstBtn.dataset.email) {
         openSupportThread(firstBtn.dataset.email);
@@ -3074,7 +3114,7 @@
       Object.keys(byEmail).forEach((e) => {
         threadMap[e] = byEmail[e].slice().sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
       });
-      const list = document.querySelector('#pane-support .wh-tile');
+      const list = document.querySelector('#supportGrid > .wh-tile:first-child');
       if (!list) return;
       const emails = Object.keys(byEmail);
       if (!emails.length) {
