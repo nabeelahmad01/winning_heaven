@@ -64,6 +64,15 @@
   </div>
   <div class="wh-toast-wrap" id="whToastWrap" aria-live="polite"></div>
 
+  <!-- Floating Live Support Chat Trigger (Jackpot Parity) -->
+  <button type="button" class="wh-chat-trigger" id="whChatTrigger" onclick="WH.openSupportChat()" title="Live Support Chat">
+    <div class="wh-chat-trigger__inner">
+      <i class="fa-solid fa-headset"></i>
+      <span class="wh-chat-trigger__badge" id="whChatUnreadBadge" style="display:none">0</span>
+    </div>
+    <span class="wh-chat-trigger__tooltip">Live Support</span>
+  </button>
+
   <div class="wh-chat" id="whChat" aria-hidden="true">
     <div class="wh-chat__panel">
       <div class="wh-chat__head">
@@ -434,11 +443,24 @@
       _chatPoll: null,
       _chatAttachment: '',
       _chatEmail: '',
+      getChatEmail(optsEmail) {
+        if (optsEmail) return optsEmail;
+        if (window.__WH_USER_EMAIL) return window.__WH_USER_EMAIL;
+        let guest = localStorage.getItem('wh_chat_email');
+        if (!guest) {
+          guest = 'guest_' + Math.random().toString(36).substring(2, 9) + '@winningheaven.com';
+          localStorage.setItem('wh_chat_email', guest);
+        }
+        return guest;
+      },
       openSupportChat(opts = {}) {
         const chat = document.getElementById('whChat');
         if (!chat) return;
-        this._chatEmail = opts.email || '';
-        document.getElementById('whChatSub').textContent = this._chatEmail || 'Winning Heaven';
+        this._chatEmail = this.getChatEmail(opts.email);
+        const sub = document.getElementById('whChatSub');
+        if (sub) {
+          sub.textContent = window.__WH_USER_EMAIL ? window.__WH_USER_EMAIL : (this._chatEmail.startsWith('guest_') ? 'Guest Support' : this._chatEmail);
+        }
         chat.classList.add('is-on');
         chat.setAttribute('aria-hidden', 'false');
         this._chatAttachment = '';
@@ -460,7 +482,8 @@
         const body = document.getElementById('whChatBody');
         if (!body) return;
         try {
-          const url = this._chatEmail ? ('/support?email=' + encodeURIComponent(this._chatEmail)) : '/support';
+          const emailParam = this._chatEmail || this.getChatEmail();
+          const url = emailParam ? ('/support?email=' + encodeURIComponent(emailParam)) : '/support';
           const d = await this.api(url);
           const items = (d.items || []).slice().reverse();
           body.innerHTML = '';
@@ -469,17 +492,16 @@
             return;
           }
           items.forEach((m) => {
-            const mine = (m.sender_type || '') === 'player' || (m.sender_email && m.sender_email === (window.__WH_USER_EMAIL || ''));
+            const isMine = (m.sender_type || '') === 'player' || (m.sender_email && (m.sender_email === (window.__WH_USER_EMAIL || '') || m.sender_email === this._chatEmail));
             const row = document.createElement('div');
-            row.className = 'wh-chat__msg' + (mine ? ' is-mine' : ' is-theirs');
+            row.className = 'wh-chat__msg' + (isMine ? ' is-mine' : ' is-theirs');
             const meta = document.createElement('div');
             meta.className = 'wh-chat__meta';
-            meta.textContent = (m.sender_type || 'player') + ' · ' + (m.created_at || '');
+            meta.textContent = (m.sender_type === 'admin' ? 'Support Admin' : (m.user_name || 'Guest')) + ' · ' + (m.created_at || '');
             row.appendChild(meta);
             if (m.message) {
               const msgText = String(m.message || '').trim();
               const hasImg = !!m.attachment;
-              // Don't show placeholder word when image is attached
               if (!(hasImg && /^attachment$/i.test(msgText))) {
                 const text = document.createElement('div');
                 text.textContent = msgText;
@@ -505,12 +527,13 @@
         } catch (_) {}
       },
       async sendSupportChat(message) {
+        const activeEmail = this._chatEmail || this.getChatEmail();
         const payload = {
           message: message || (this._chatAttachment ? 'Attachment' : ''),
           attachment: this._chatAttachment || undefined,
-          sender_type: 'player'
+          sender_type: 'player',
+          user_email: activeEmail
         };
-        if (this._chatEmail) payload.user_email = this._chatEmail;
         await this.api('/support', { method: 'POST', body: JSON.stringify(payload) });
         this._chatAttachment = '';
         const prev = document.getElementById('whChatPreview');

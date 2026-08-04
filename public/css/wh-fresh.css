@@ -932,26 +932,27 @@ button, input, select { font: inherit; }
 .wh-chat {
   position: fixed; inset: 0; z-index: 240; display: none;
   align-items: flex-end; justify-content: flex-end;
-  padding: 1rem; background: rgba(0,0,0,.35);
+  padding: 1rem; background: rgba(0,0,0,.5); backdrop-filter: blur(4px);
 }
 .wh-chat.is-on { display: flex; }
 .wh-chat__panel {
-  width: min(420px, 100%); height: min(640px, calc(100vh - 2rem));
-  background: #0b1420; border: 1px solid rgba(62,224,178,.28);
-  border-radius: 18px; display: flex; flex-direction: column;
-  box-shadow: 0 24px 60px rgba(0,0,0,.55); overflow: hidden;
+  width: min(440px, 100%); height: min(640px, calc(100vh - 2rem));
+  background: #0b1420; border: 1px solid rgba(62,224,178,.35);
+  border-radius: 20px; display: flex; flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0,0,0,.75); overflow: hidden;
 }
 .wh-chat__head {
   display:flex; justify-content:space-between; align-items:center;
   padding: .9rem 1rem; border-bottom: 1px solid var(--line);
-  background: linear-gradient(135deg, rgba(62,224,178,.12), rgba(76,201,240,.06));
+  background: linear-gradient(135deg, rgba(62,224,178,.18), rgba(76,201,240,.08));
 }
 .wh-chat__head strong { display:block; font-size: .95rem; }
 .wh-chat__head span { color: var(--mute); font-size: .72rem; }
 .wh-chat__close {
-  border:0; background:rgba(255,255,255,.06); color:#fff; width:32px; height:32px;
-  border-radius:999px; cursor:pointer; font-size:1.2rem;
+  border:0; background:rgba(255,255,255,.08); color:#fff; width:34px; height:34px;
+  border-radius:999px; cursor:pointer; font-size:1.3rem; display:grid; place-items:center;
 }
+.wh-chat__close:hover { background: rgba(255,255,255,.18); }
 .wh-chat__body { flex:1; overflow:auto; padding: .85rem; display:flex; flex-direction:column; gap:.55rem; }
 .wh-chat__empty { color: var(--mute); text-align:center; margin: auto; font-size: .85rem; }
 .wh-chat__msg {
@@ -967,10 +968,10 @@ button, input, select { font: inherit; }
 }
 .wh-chat__form {
   display:flex; gap: .45rem; align-items:center; padding: .65rem .75rem;
-  border-top: 1px solid var(--line); background: rgba(0,0,0,.2);
+  border-top: 1px solid var(--line); background: rgba(0,0,0,.3);
 }
 .wh-chat__form input[type=text] {
-  flex:1; border:1px solid var(--line); background:rgba(0,0,0,.35); color:var(--ink);
+  flex:1; border:1px solid var(--line); background:rgba(0,0,0,.4); color:var(--ink);
   border-radius: 12px; padding: .7rem .8rem; outline:none; font: inherit;
 }
 .wh-chat__attach {
@@ -986,6 +987,44 @@ button, input, select { font: inherit; }
 .wh-chat__preview button {
   border:0; background:transparent; color:#fff; font-size:1.2rem; cursor:pointer; margin-left:auto;
 }
+
+/* Floating Live Support Widget Button (Jackpot Parity) */
+.wh-chat-trigger {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 230;
+  border: none; background: transparent; cursor: pointer;
+  display: flex; align-items: center; gap: 0.5rem; padding: 0;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+.wh-chat-trigger:hover { transform: translateY(-3px) scale(1.04); }
+.wh-chat-trigger__inner {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #3ee0b2, #10b981);
+  color: #041018; display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; box-shadow: 0 8px 24px rgba(62,224,178,0.45);
+  position: relative; border: 2px solid rgba(255,255,255,0.3);
+}
+.wh-chat-trigger__badge {
+  position: absolute; top: -4px; right: -4px;
+  background: #ef4444; color: #fff; font-size: 0.7rem; font-weight: 800;
+  padding: 2px 6px; border-radius: 999px; border: 2px solid #0b1420;
+}
+.wh-chat-trigger__tooltip {
+  background: rgba(11, 20, 32, 0.92); color: #fff;
+  border: 1px solid rgba(62,224,178,0.35); padding: 0.4rem 0.8rem;
+  border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+  backdrop-filter: blur(8px); box-shadow: 0 4px 14px rgba(0,0,0,0.35); white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .wh-chat { padding: 0; }
+  .wh-chat__panel {
+    width: 100%; height: 100%; max-height: 100vh;
+    border-radius: 0; border: none;
+  }
+  .wh-chat-trigger { bottom: 1rem; right: 1rem; }
+  .wh-chat-trigger__tooltip { display: none; }
+}
+
 .wh-lightbox.is-on { display:flex; }
 
 /* ===== Lobby wallet / invoice (Jackpot layout, WH colors) ===== */

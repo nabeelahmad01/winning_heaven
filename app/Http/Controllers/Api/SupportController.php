@@ -17,14 +17,19 @@ class SupportController extends Controller
         }
         $user = $request->user();
         $q = SupportMessage::query()->latest();
-        if ($email = $request->query('email')) {
-            if ($user && method_exists($user, 'isStaff') && $user->isStaff()) {
-                $q->where('user_email', strtolower($email));
-            } else {
-                $q->where('user_email', strtolower($user?->email ?? $email));
+        $requestedEmail = $request->query('email');
+
+        if ($user && method_exists($user, 'isStaff') && $user->isStaff()) {
+            if ($requestedEmail) {
+                $q->where('user_email', strtolower($requestedEmail));
             }
-        } elseif ($user && method_exists($user, 'isStaff') && ! $user->isStaff()) {
-            $q->where('user_email', strtolower((string) $user->email));
+        } else {
+            $effectiveEmail = $user?->email ?? $requestedEmail;
+            if ($effectiveEmail) {
+                $q->where('user_email', strtolower($effectiveEmail));
+            } else {
+                return response()->json(['ok' => true, 'items' => []]);
+            }
         }
         return response()->json(['ok' => true, 'items' => $q->limit(300)->get()]);
     }
@@ -33,7 +38,7 @@ class SupportController extends Controller
     {
         $data = $request->validate([
             'message' => 'nullable|string',
-            'user_email' => 'nullable|email',
+            'user_email' => 'nullable|string',
             'attachment' => 'nullable|string',
             'sender_type' => 'nullable|string',
         ]);
@@ -46,24 +51,31 @@ class SupportController extends Controller
         if ($message === '' && ! empty($attachment)) {
             $message = 'Attachment';
         }
-        $email = strtolower($data['user_email'] ?? $user->email);
+        $email = strtolower(trim((string) ($data['user_email'] ?? $user?->email ?? '')));
+        if (! $email) {
+            return response()->json(['ok' => false, 'error' => 'Valid user email or chat ID is required'], 422);
+        }
         if ($user && method_exists($user, 'isStaff') && ! $user->isStaff()) {
             $email = strtolower((string) $user->email);
         }
-        $senderType = $data['sender_type'] ?? ($user->isStaff() ? 'admin' : 'player');
+        $isStaff = $user && method_exists($user, 'isStaff') && $user->isStaff();
+        $senderType = $data['sender_type'] ?? ($isStaff ? 'admin' : 'player');
+        $userName = $user?->name ?? ($isStaff ? 'Admin' : 'Guest Visitor');
+        $senderEmail = $user?->email ?? $email;
+        $distributorId = $user?->distributor_id ?? null;
 
         $msg = SupportMessage::create([
             'public_id' => PublicId::make('sm_'),
             'user_email' => $email,
-            'user_name' => $user->name,
+            'user_name' => $userName,
             'message' => $message,
             'attachment' => $attachment,
             'has_attachment' => ! empty($attachment),
             'sender_type' => $senderType,
-            'sender_email' => $user->email,
-            'distributor_id' => $user->distributor_id,
+            'sender_email' => $senderEmail,
+            'distributor_id' => $distributorId,
         ]);
-        Realtime::publish('support', ['distributorId' => $user->distributor_id, 'senderType' => $senderType]);
+        Realtime::publish('support', ['distributorId' => $distributorId, 'senderType' => $senderType]);
         return response()->json(['ok' => true, 'item' => $msg], 201);
     }
 }

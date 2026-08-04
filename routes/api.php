@@ -42,6 +42,10 @@ Route::get('/games', [GameController::class, 'index']);
 Route::get('/gateways', [GatewayController::class, 'index']);
 Route::get('/promotions', [PromotionController::class, 'index']);
 
+// Live Support Chat (Guests & Registered Users)
+Route::get('/support', [SupportController::class, 'index']);
+Route::post('/support', [SupportController::class, 'store']);
+
 Route::post('/distributors/login', [DistributorController::class, 'login']);
 Route::post('/agents/login', [AgentController::class, 'login']);
 Route::post('/agents', [AgentController::class, 'store']);
@@ -61,9 +65,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/game-accounts', [GameAccountController::class, 'index']);
     Route::put('/game-accounts', [GameAccountController::class, 'update']);
     Route::delete('/game-accounts', [GameAccountController::class, 'destroy']);
-
-    Route::get('/support', [SupportController::class, 'index']);
-    Route::post('/support', [SupportController::class, 'store']);
 
     Route::get('/freeplay/gate', [FreeplayController::class, 'gate']);
     Route::post('/freeplay/claim', [FreeplayController::class, 'claim']);
