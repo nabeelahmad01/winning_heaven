@@ -1,22 +1,47 @@
 {
   "project_info": {
-    "project_number": "123456789012",
-    "project_id": "winning-heaven-dummy",
-    "storage_bucket": "winning-heaven-dummy.appspot.com"
+    "project_number": "115355464361",
+    "project_id": "winning-heaven",
+    "storage_bucket": "winning-heaven.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789012:android:portal1234567890",
+        "mobilesdk_app_id": "1:115355464361:android:591a067ba0728cc1e66fb8",
+        "android_client_info": {
+          "package_name": "com.winningheaven.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeLyevpxv6Q-JxDfPT7wbsaXjbk4rpoEE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:115355464361:android:fa6f547b2f858ff3e66fb8",
         "android_client_info": {
           "package_name": "com.winningheaven.portal"
         }
       },
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDummyKey_AdminPortal1234567890"
+          "current_key": "AIzaSyCeLyevpxv6Q-JxDfPT7wbsaXjbk4rpoEE"
         }
-      ]
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"

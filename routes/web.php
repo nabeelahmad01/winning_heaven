@@ -40,8 +40,17 @@ Route::get('/download-admin-app', function () {
 Route::get('/downloads/WinningHeaven.apk', function () {
     return redirect()->route('download.player');
 });
+Route::get('/downloads/winning-heaven.apk', function () {
+    return redirect()->route('download.player');
+});
 
 Route::get('/downloads/WHPortal.apk', function () {
+    return redirect()->route('download.admin');
+});
+Route::get('/downloads/winning-heaven-portal.apk', function () {
+    return redirect()->route('download.admin');
+});
+Route::get('/downloads/winning-heaven-distributor.apk', function () {
     return redirect()->route('download.admin');
 });
 
