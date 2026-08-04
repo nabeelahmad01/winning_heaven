@@ -2863,31 +2863,25 @@
       const msgs = (d.items || []).slice().reverse();
       threadMap[email] = msgs;
       if (activeSupportEmail === email) renderSupportMessages(msgs);
-      // Refresh left list timestamps / unread feel
-      softRefreshSupportList();
+      softRefreshSupportSidebar();
     } catch (e) {
       if (!silent) WH.toast(e.message || 'Could not load thread', 'error');
     }
   }
 
-  function softRefreshSupportList() {
-    // Rebuild thread buttons from threadMap keys if empty list grows via API later
-    const wrap = document.querySelector('#pane-support .wh-tile');
-    if (!wrap) return;
-  }
-
   function openSupportThread(email) {
+    if (!email) return;
     activeSupportEmail = email;
     document.querySelectorAll('.support-thread-btn').forEach((b) => {
-      b.style.background = b.dataset.email === email ? 'rgba(62,224,178,.14)' : 'transparent';
+      b.style.background = b.dataset.email === email ? 'rgba(62,224,178,.18)' : 'transparent';
     });
     const meta = document.getElementById('supportThreadMeta');
     const form = document.getElementById('supportReplyForm');
     const emailInput = document.getElementById('supportReplyEmail');
-    if (meta) meta.textContent = email;
+    if (meta) meta.innerHTML = '<strong style="color:var(--sand);font-size:1rem">' + email + '</strong> <span class="wh-badge" style="margin-left:.5rem;font-size:.7rem">Active Conversation</span>';
     if (emailInput) emailInput.value = email;
-    if (form) form.style.display = 'grid';
-    // Show cached instantly, then always fetch fresh (includes attachment images)
+    if (form) form.style.display = 'flex';
+    // Show cached instantly, then fetch fresh
     renderSupportMessages(threadMap[email] || []);
     fetchSupportThread(email, true);
     if (supportPollTimer) clearInterval(supportPollTimer);
@@ -2896,8 +2890,13 @@
     }, 2500);
   }
 
-  document.querySelectorAll('.support-thread-btn').forEach((btn) => {
-    btn.onclick = () => openSupportThread(btn.dataset.email);
+  // Global event delegation for support thread selection
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.support-thread-btn');
+    if (btn && btn.dataset.email) {
+      e.preventDefault();
+      openSupportThread(btn.dataset.email);
+    }
   });
 
   let supportReplyAttachment = '';
@@ -3036,7 +3035,7 @@
       const items = d.items || [];
       const byEmail = {};
       items.forEach((m) => {
-        const e = String(m.user_email || '').toLowerCase();
+        const e = String(m.user_email || '').toLowerCase().trim();
         if (!e) return;
         if (!byEmail[e]) byEmail[e] = [];
         byEmail[e].push(m);
@@ -3046,20 +3045,34 @@
       });
       const list = document.querySelector('#pane-support .wh-tile');
       if (!list) return;
-      const emails = Object.keys(byEmail).sort();
-      if (!emails.length) return;
-      // Rebuild thread buttons if new emails appeared
-      const existing = new Set([...document.querySelectorAll('.support-thread-btn')].map((b) => b.dataset.email));
+      const emails = Object.keys(byEmail);
+      if (!emails.length) {
+        list.innerHTML = '<p style="color:var(--mute);padding:.65rem">No messages</p>';
+        return;
+      }
+      list.innerHTML = '';
       emails.forEach((email) => {
-        if (existing.has(email)) return;
+        const msgs = byEmail[email] || [];
+        const last = msgs[msgs.length - 1] || msgs[0] || {};
+        const unreadCount = msgs.filter(m => m.sender_type === 'player' && !m.read).length;
+        const isSelected = activeSupportEmail === email;
+
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'support-thread-btn';
         btn.dataset.email = email;
-        btn.style.cssText = 'display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);padding:.65rem .55rem;border-radius:10px;cursor:pointer;font-weight:600';
-        btn.textContent = email;
-        btn.onclick = () => openSupportThread(email);
-        list.prepend(btn);
+        btn.style.cssText = 'display:block;width:100%;text-align:left;border:0;background:' + (isSelected ? 'rgba(62,224,178,.18)' : 'transparent') + ';color:var(--ink);padding:.7rem .65rem;border-radius:12px;cursor:pointer;margin-bottom:.2rem;position:relative';
+
+        const textSnippet = String(last.message || (last.attachment ? 'Image Attachment' : '')).replace(/</g, '&lt;');
+        
+        btn.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:.35rem">
+            <strong style="display:block;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${email}</strong>
+            ${unreadCount > 0 ? `<span class="wh-nav-badge is-mint" style="font-size:.68rem;padding:2px 6px;margin-left:4px;flex-shrink:0">${unreadCount}</span>` : ''}
+          </div>
+          <span style="color:var(--mute);font-size:.72rem;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${textSnippet}</span>
+        `;
+        list.appendChild(btn);
       });
     } catch (_) {}
   }

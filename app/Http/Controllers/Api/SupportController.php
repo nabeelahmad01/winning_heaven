@@ -15,18 +15,25 @@ class SupportController extends Controller
         if (session_status() === PHP_SESSION_ACTIVE) {
             @session_write_close();
         }
-        $user = $request->user();
+        $user = $request->user() ?? auth('web')->user() ?? auth()->user();
         $q = SupportMessage::query()->latest();
-        $requestedEmail = $request->query('email');
+        $requestedEmail = trim((string) $request->query('email'));
 
-        if ($user && method_exists($user, 'isStaff') && $user->isStaff()) {
-            if ($requestedEmail) {
+        $isStaff = $user && method_exists($user, 'isStaff') && $user->isStaff();
+
+        if ($isStaff) {
+            if ($requestedEmail !== '') {
                 $q->where('user_email', strtolower($requestedEmail));
+                // Automatically mark player messages as READ when staff views thread
+                SupportMessage::where('user_email', strtolower($requestedEmail))
+                    ->where('sender_type', 'player')
+                    ->where('read', false)
+                    ->update(['read' => true]);
             }
         } else {
-            $effectiveEmail = $user?->email ?? $requestedEmail;
-            if ($effectiveEmail) {
-                $q->where('user_email', strtolower($effectiveEmail));
+            $effectiveEmail = strtolower($user?->email ?? $requestedEmail);
+            if ($effectiveEmail !== '') {
+                $q->where('user_email', $effectiveEmail);
             } else {
                 return response()->json(['ok' => true, 'items' => []]);
             }

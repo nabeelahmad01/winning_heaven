@@ -561,8 +561,41 @@
         if (prev) prev.style.display = 'none';
         document.getElementById('whChatInput').value = '';
         await this.refreshSupportChat();
+      },
+      _lastAdminCount: 0,
+      initPlayerSupportPoll() {
+        const poll = async () => {
+          try {
+            const emailParam = this.getChatEmail();
+            if (!emailParam) return;
+            const d = await this.api('/support?email=' + encodeURIComponent(emailParam));
+            const items = d.items || [];
+            const adminMsgs = items.filter(m => m.sender_type === 'admin');
+            const badge = document.getElementById('whChatUnreadBadge');
+            const chatBox = document.getElementById('whChat');
+            const isOpen = chatBox && chatBox.classList.contains('is-on');
+
+            if (adminMsgs.length > 0 && !isOpen) {
+              if (badge) {
+                badge.style.display = 'inline-block';
+                badge.textContent = adminMsgs.length > 99 ? '99+' : String(adminMsgs.length);
+              }
+            } else if (badge && isOpen) {
+              badge.style.display = 'none';
+            }
+
+            if (adminMsgs.length > this._lastAdminCount && this._lastAdminCount > 0) {
+              this.playNotificationSound();
+              this.toast('New support message from Admin', 'info');
+            }
+            this._lastAdminCount = adminMsgs.length;
+          } catch (_) {}
+        };
+        poll();
+        setInterval(poll, 4000);
       }
     };
+    WH.initPlayerSupportPoll();
     document.getElementById('whUiBackdrop')?.addEventListener('click', (e) => {
       if (e.target.id === 'whUiBackdrop') WH._closeModal(null);
     });
