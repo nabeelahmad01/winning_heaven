@@ -900,24 +900,20 @@
             <p style="color:var(--mute);padding:.65rem">No messages</p>
           @endforelse
         </div>
-        <div class="wh-tile" style="display:flex;flex-direction:column;min-height:450px">
-          <div id="supportThreadMeta" style="color:var(--mute);font-size:.85rem;margin-bottom:.75rem">Select a thread</div>
-          <div id="supportThreadBody" style="flex:1;overflow:auto;max-height:52vh;margin-bottom:.85rem">
-            <p style="color:var(--mute)">Pick a player conversation on the left.</p>
+        <div class="wh-tile" style="display:flex;flex-direction:column;min-height:480px">
+          <div id="supportThreadMeta" style="color:var(--mute);font-size:.85rem;padding-bottom:.65rem;border-bottom:1px solid var(--line);margin-bottom:.85rem">Select a thread on the left</div>
+          <div id="supportThreadBody" style="flex:1;overflow:auto;max-height:50vh;margin-bottom:.85rem;padding-right:.4rem">
+            <p style="color:var(--mute)">Pick a player conversation on the left to start replying.</p>
           </div>
-          <form id="supportReplyForm" style="display:none;gap:.55rem">
+          <form id="supportReplyForm" style="display:none;align-items:center;gap:.6rem;margin-top:auto;padding-top:.85rem;border-top:1px solid var(--line);background:rgba(11,20,32,0.4);border-radius:12px;padding:.65rem">
             <input type="hidden" id="supportReplyEmail" name="user_email">
-            <div class="wh-field" style="margin:0;flex:1">
-              <label>Reply</label>
-              <div class="box"><input id="supportReplyMsg" name="message" placeholder="Type reply…"></div>
-            </div>
-            <label class="wh-upload" style="margin:0">
-              <input type="file" id="supportReplyFile" accept="image/*">
-              <i class="fa-solid fa-paperclip"></i>
-              <div>Attach image</div>
-              <img id="supportReplyPreview" alt="" style="display:none">
+            <label class="wh-nav__btn" style="cursor:pointer;padding:.65rem .85rem;display:flex;align-items:center;gap:.35rem;font-size:.85rem" title="Attach screenshot or image">
+              <i class="fa-solid fa-paperclip" style="color:var(--sand)"></i>
+              <input type="file" id="supportReplyFile" accept="image/*" style="display:none">
+              <img id="supportReplyPreview" alt="" style="display:none;max-height:30px;border-radius:6px;margin-left:4px">
             </label>
-            <button class="wh-cta" type="submit">Send reply</button>
+            <input type="text" id="supportReplyMsg" name="message" placeholder="Type reply to player…" autocomplete="off" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--line);color:#fff;padding:.7rem 1rem;border-radius:10px;font-size:.9rem;outline:none">
+            <button class="wh-cta" type="submit" style="padding:.7rem 1.25rem;font-weight:bold"><i class="fa-solid fa-paper-plane"></i> Send</button>
           </form>
         </div>
       </div>
